@@ -5,6 +5,11 @@ To install the code run
 `pip install hyperpcr`
 If you are on Linux this should automatically install all the dependencies.
 On windows you might need to manually install pytorch.
+### Installation from sources (Linux)
+Type the following while within the repository:
+```console
+pip install -e .
+```
 ### Usage
 The following script download a checkpoint and a partial point cloud. Then it process it and generates its reconstruction. If you wanna visualize the results you have to additionally install Open3D python library.
 ```python
