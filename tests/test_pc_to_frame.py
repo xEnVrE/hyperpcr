@@ -43,9 +43,10 @@ def get_pose(points):
 
 
 def main():
-    cloud = numpy.loadtxt('./reconstruction.txt')
+    cloud_in = numpy.loadtxt('./reconstruction.txt')
+    cloud_out = numpy.loadtxt('./reconstruction.txt')
 
-    pose = get_pose(cloud)
+    pose = get_pose(cloud_out)
 
     centroid = numpy.zeros((1, 3))
     centroid[0, :] = pose[0:3, 3]
@@ -59,7 +60,8 @@ def main():
         widget3d.scene.set_background([1.0, 1.0, 1.0, 1.0])
         window.add_child(widget3d)
 
-        add_point_cloud('object', cloud, [33 / 255, 150 / 255, 243 / 255], 3, widget3d.scene)
+        add_point_cloud('partial', cloud_in, [100 / 255, 10 / 255, 10 / 255], 3, widget3d.scene)
+        add_point_cloud('object', cloud_out, [33 / 255, 150 / 255, 243 / 255], 3, widget3d.scene)
         add_point_cloud('centroid', centroid, [1, 0, 0], 10, widget3d.scene)
         widget3d.setup_camera(60, widget3d.scene.bounding_box, [0, 0, 0])
         add_axes('camera_axes', numpy.eye(4), widget3d.scene)
