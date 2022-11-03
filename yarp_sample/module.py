@@ -107,8 +107,9 @@ class InferenceModule (yarp.RFModule):
             mask_frame = numpy.frombuffer(self.mask_buffer, dtype=numpy.uint8).reshape(self.options.height, self.options.width)
 
             mask_selector = mask_frame != 0
-            depth_valid_selector = depth_frame < 0.55
-            valid_selector = mask_selector & depth_valid_selector
+            depth_valid_up_selector = depth_frame < 1.0
+            depth_valid_down_selector = depth_frame > 0.3
+            valid_selector = mask_selector & depth_valid_up_selector & depth_valid_down_selector
             z = depth_frame[valid_selector]
             x_z = self.selector_u[valid_selector]
             y_z = self.selector_v[valid_selector]
@@ -127,13 +128,15 @@ class InferenceModule (yarp.RFModule):
             if not self.vis_init:
                 self.vis_init = True
                 self.cloud_vis_in = self.to_point_cloud(cloud, [33 / 255, 150 / 255, 243 / 255])
-                self.cloud_vis_out = self.to_point_cloud(complete, [100 / 255, 10 / 255, 10 / 255])
                 self.vis.add_geometry(self.cloud_vis_in)
+
+                self.cloud_vis_out = self.to_point_cloud(complete, [100 / 255, 10 / 255, 10 / 255])
                 self.vis.add_geometry(self.cloud_vis_out)
             else:
-                self.cloud_vis_in.points = o3d.utility.Vector3dVector(cloud)
-                self.cloud_vis_out.points = o3d.utility.Vector3dVector(complete)
+                self.cloud_vis_in = self.update_point_cloud(self.cloud_vis_in, cloud, [33 / 255, 150 / 255, 243 / 255])
                 self.vis.update_geometry(self.cloud_vis_in)
+
+                self.cloud_vis_out = self.update_point_cloud(self.cloud_vis_out, complete, [100 / 255, 10 / 255, 10 / 255])
                 self.vis.update_geometry(self.cloud_vis_out)
 
             ender.record()
@@ -150,6 +153,14 @@ class InferenceModule (yarp.RFModule):
     def to_point_cloud(self, points, color):
 
         cloud = o3d.geometry.PointCloud()
+        cloud.points = o3d.utility.Vector3dVector(points)
+        cloud = cloud.paint_uniform_color(color)
+
+        return cloud
+
+
+    def update_point_cloud(self, cloud, points, color):
+
         cloud.points = o3d.utility.Vector3dVector(points)
         cloud = cloud.paint_uniform_color(color)
 
