@@ -1,7 +1,7 @@
 import argparse
+import open3d as o3d
 import os
 import numpy
-import time
 import torch
 import yarp
 from pcr.model import PCRNetwork as Model
@@ -55,6 +55,11 @@ class InferenceModule (yarp.RFModule):
 
         self.store_image_selector()
 
+        # Visualizer
+        self.vis = o3d.visualization.Visualizer()
+        self.vis.create_window('Shape Completion Viewer', 600, 600)
+        self.vis_init = False
+
 
     def store_image_selector(self):
 
@@ -74,6 +79,7 @@ class InferenceModule (yarp.RFModule):
 
         self.depth_in.close()
         self.mask_in.close()
+        self.vis.destroy_window()
 
         return True
 
@@ -118,12 +124,36 @@ class InferenceModule (yarp.RFModule):
             complete = complete.squeeze(0).cpu().numpy()
             complete = Denormalize(Config.Processing)(complete, ctx)
 
+            if not self.vis_init:
+                self.vis_init = True
+                self.cloud_vis_in = self.to_point_cloud(cloud, [33 / 255, 150 / 255, 243 / 255])
+                self.cloud_vis_out = self.to_point_cloud(complete, [100 / 255, 10 / 255, 10 / 255])
+                self.vis.add_geometry(self.cloud_vis_in)
+                self.vis.add_geometry(self.cloud_vis_out)
+            else:
+                self.cloud_vis_in.points = o3d.utility.Vector3dVector(cloud)
+                self.cloud_vis_out.points = o3d.utility.Vector3dVector(complete)
+                self.vis.update_geometry(self.cloud_vis_in)
+                self.vis.update_geometry(self.cloud_vis_out)
+
             ender.record()
             torch.cuda.synchronize()
             elapsed = starter.elapsed_time(ender) / 1000.0
             print(1.0 / elapsed)
 
+        self.vis.poll_events()
+        self.vis.update_renderer()
+
         return True
+
+
+    def to_point_cloud(self, points, color):
+
+        cloud = o3d.geometry.PointCloud()
+        cloud.points = o3d.utility.Vector3dVector(points)
+        cloud = cloud.paint_uniform_color(color)
+
+        return cloud
 
 
 if __name__ == '__main__':
