@@ -114,35 +114,36 @@ class InferenceModule (yarp.RFModule):
             x_z = self.selector_u[valid_selector]
             y_z = self.selector_v[valid_selector]
 
-            cloud = numpy.zeros((z.shape[0], 3), dtype = numpy.float32)
-            cloud[:, 0] = x_z * z
-            cloud[:, 1] = y_z * z
-            cloud[:, 2] = z
+            if len(z) > 0:
+                cloud = numpy.zeros((z.shape[0], 3), dtype = numpy.float32)
+                cloud[:, 0] = x_z * z
+                cloud[:, 1] = y_z * z
+                cloud[:, 2] = z
 
-            partial, ctx = Normalize(Config.Processing)(cloud)
-            partial = torch.tensor(partial, dtype=torch.float32).cuda().unsqueeze(0)
-            complete, probabilities = self.model(partial)
-            complete = complete.squeeze(0).cpu().numpy()
-            complete = Denormalize(Config.Processing)(complete, ctx)
+                partial, ctx = Normalize(Config.Processing)(cloud)
+                partial = torch.tensor(partial, dtype=torch.float32).cuda().unsqueeze(0)
+                complete, probabilities = self.model(partial)
+                complete = complete.squeeze(0).cpu().numpy()
+                complete = Denormalize(Config.Processing)(complete, ctx)
 
-            if not self.vis_init:
-                self.vis_init = True
-                self.cloud_vis_in = self.to_point_cloud(cloud, [33 / 255, 150 / 255, 243 / 255])
-                self.vis.add_geometry(self.cloud_vis_in)
+                if not self.vis_init:
+                    self.vis_init = True
+                    self.cloud_vis_in = self.to_point_cloud(cloud, [33 / 255, 150 / 255, 243 / 255])
+                    self.vis.add_geometry(self.cloud_vis_in)
 
-                self.cloud_vis_out = self.to_point_cloud(complete, [100 / 255, 10 / 255, 10 / 255])
-                self.vis.add_geometry(self.cloud_vis_out)
-            else:
-                self.cloud_vis_in = self.update_point_cloud(self.cloud_vis_in, cloud, [33 / 255, 150 / 255, 243 / 255])
-                self.vis.update_geometry(self.cloud_vis_in)
+                    self.cloud_vis_out = self.to_point_cloud(complete, [100 / 255, 10 / 255, 10 / 255])
+                    self.vis.add_geometry(self.cloud_vis_out)
+                else:
+                    self.cloud_vis_in = self.update_point_cloud(self.cloud_vis_in, cloud, [33 / 255, 150 / 255, 243 / 255])
+                    self.vis.update_geometry(self.cloud_vis_in)
 
-                self.cloud_vis_out = self.update_point_cloud(self.cloud_vis_out, complete, [100 / 255, 10 / 255, 10 / 255])
-                self.vis.update_geometry(self.cloud_vis_out)
+                    self.cloud_vis_out = self.update_point_cloud(self.cloud_vis_out, complete, [100 / 255, 10 / 255, 10 / 255])
+                    self.vis.update_geometry(self.cloud_vis_out)
 
             ender.record()
             torch.cuda.synchronize()
             elapsed = starter.elapsed_time(ender) / 1000.0
-            print(1.0 / elapsed)
+            # print(1.0 / elapsed)
 
         self.vis.poll_events()
         self.vis.update_renderer()
