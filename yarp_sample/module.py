@@ -133,7 +133,7 @@ class InferenceModule(yarp.RFModule):
             ender.record()
             torch.cuda.synchronize()
             elapsed = starter.elapsed_time(ender) / 1000.0
-            # print(1.0 / elapsed)
+            print(1.0 / elapsed)
 
         return True
 
