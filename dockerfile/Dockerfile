@@ -87,6 +87,7 @@ RUN git clone --progress https://github.com/xenvre/hyperpcr && \
     cmake ../ && make -j$NJOBS && \
     cd /home/user/hyperpcr && virtualenv env && \
     . env/bin/activate && \
+    pip install --upgrade pip && \
     pip install .
     deactivate
 
