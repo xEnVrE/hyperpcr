@@ -5,6 +5,7 @@ import numpy
 import torch
 import yarp
 from config import Config as IMConfig
+from dbscan import DBSCAN
 from pcr.model import PCRNetwork as Model
 from pcr.utils import Normalize, Denormalize
 from pcr.default_config import Config
@@ -115,6 +116,12 @@ class InferenceModule(yarp.RFModule):
                 cloud[:, 0] = x_z * z
                 cloud[:, 1] = y_z * z
                 cloud[:, 2] = z
+
+                labels, _ = DBSCAN(cloud.astype(dtype = numpy.float64), eps = 0.01, min_samples = 100)
+                labels_count = [list(labels).count(i) for i in range(0, labels.max() + 1)]
+                label_max = numpy.argmax(labels_count)
+                if labels_count[label_max] > 0:
+                    cloud = cloud[labels == label_max]
 
                 partial, ctx = Normalize(Config.Processing)(cloud)
                 partial = torch.tensor(partial, dtype=torch.float32).cuda().unsqueeze(0)

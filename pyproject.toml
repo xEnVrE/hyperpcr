@@ -13,6 +13,7 @@ timm = "^0.5.4"
 rich = "^12.2.0"
 requests = "^2.17"
 open3d = "^0.16"
+dbscan = "^0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
