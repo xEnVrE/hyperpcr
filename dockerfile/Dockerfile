@@ -49,7 +49,7 @@ RUN git config --global user.name "user" && \
 RUN source /robotology-superbuild/build/install/share/robotology-superbuild/setup.sh && \
     git clone --progress https://github.com/xenvre/robots-io && \
     cd robots-io && mkdir build && cd build && \
-    cmake -DUSE_YARP:BOOL=ON .. && \
+    cmake -DUSE_YARP:BOOL=ON -DUSE_ICUB:BOOL=ON .. && \
     make -j$NJOBS install && \
     rm -rf /robots-io
 
@@ -82,7 +82,8 @@ RUN echo "(setq-default indent-tabs-mode nil)" >> /home/user/.emacs.el && \
 
 # Setup hyperpcr
 WORKDIR /home/user
-RUN git clone --progress https://github.com/xenvre/hyperpcr && \
+RUN source /robotology-superbuild/build/install/share/robotology-superbuild/setup.sh && \
+    git clone --progress https://github.com/xenvre/hyperpcr && \
     cd ./hyperpcr && mkdir build && cd build && \
     cmake ../ && make -j$NJOBS && \
     cd /home/user/hyperpcr && virtualenv env && \
