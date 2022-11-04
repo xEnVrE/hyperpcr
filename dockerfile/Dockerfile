@@ -88,7 +88,7 @@ RUN git clone --progress https://github.com/xenvre/hyperpcr && \
     cd /home/user/hyperpcr && virtualenv env && \
     . env/bin/activate && \
     pip install --upgrade pip && \
-    pip install .
+    pip install . && \
     deactivate
 
 # Configure robotology-superbuild
