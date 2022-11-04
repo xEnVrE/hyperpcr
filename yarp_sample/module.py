@@ -1,26 +1,25 @@
 import argparse
-import open3d as o3d
+import copy
 import os
 import numpy
 import torch
 import yarp
+from config import Config as IMConfig
 from pcr.model import PCRNetwork as Model
 from pcr.utils import Normalize, Denormalize
 from pcr.default_config import Config
 from pcr.misc import download_checkpoint, download_asset
 
 
-class InferenceModule (yarp.RFModule):
+class InferenceModule(yarp.RFModule):
 
-    def __init__(self, options):
+    def __init__(self, config):
 
-        self.options = options
-        self.options.width = 1280
-        self.options.height = 720
+        self.config = config
 
         # Set requested GPU
-        os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
-        os.environ["CUDA_VISIBLE_DEVICES"] = str(options.gpu_id)
+        os.environ['CUDA_DEVICE_ORDER'] = 'PCI_BUS_ID'
+        os.environ['CUDA_VISIBLE_DEVICES'] = str(self.config.Module.gpu_id)
 
         # Initialize YARP network
         yarp.Network.init()
@@ -30,47 +29,45 @@ class InferenceModule (yarp.RFModule):
 
         # Initialize inference
         ckpt_path = download_checkpoint(f'grasping.ckpt')
-        self.model = Model(config=Config.Model)
+        self.model = Model(config = Config.Model)
         self.model.load_state_dict(torch.load(ckpt_path)['state_dict'])
         self.model.cuda()
         self.model.eval()
 
         # Initialize YARP ports
         self.depth_in = yarp.BufferedPortImageFloat()
-        self.depth_in.open("/hyperpcr/depth:i")
+        self.depth_in.open('/hyperpcr/depth:i')
 
         self.mask_in = yarp.BufferedPortImageMono()
-        self.mask_in.open("/hyperpcr/mask:i")
+        self.mask_in.open('/hyperpcr/mask:i')
+
+        self.cloud_out = yarp.Port()
+        self.cloud_out.open('/hyperpcr/cloud:o')
 
         # Input buffers initialization
-        self.depth_buffer = bytearray(numpy.zeros((self.options.height, self.options.width, 1), dtype = numpy.float32))
+        self.depth_buffer = bytearray(numpy.zeros((self.config.Camera.height, self.config.Camera.width, 1), dtype = numpy.float32))
         self.depth_image = yarp.ImageFloat()
-        self.depth_image.resize(self.options.width, self.options.height)
-        self.depth_image.setExternal(self.depth_buffer, self.options.width, self.options.height)
+        self.depth_image.resize(self.config.Camera.width, self.config.Camera.height)
+        self.depth_image.setExternal(self.depth_buffer, self.config.Camera.width, self.config.Camera.height)
 
-        self.mask_buffer = bytearray(numpy.zeros((self.options.height, self.options.width, 1), dtype = numpy.uint8))
+        self.mask_buffer = bytearray(numpy.zeros((self.config.Camera.height, self.config.Camera.width, 1), dtype = numpy.uint8))
         self.mask_image = yarp.ImageMono()
-        self.mask_image.resize(self.options.width, self.options.height)
-        self.mask_image.setExternal(self.mask_buffer, self.options.width, self.options.height)
+        self.mask_image.resize(self.config.Camera.width, self.config.Camera.height)
+        self.mask_image.setExternal(self.mask_buffer, self.config.Camera.width, self.config.Camera.height)
 
         self.store_image_selector()
-
-        # Visualizer
-        self.vis = o3d.visualization.Visualizer()
-        self.vis.create_window('Shape Completion Viewer', 600, 600)
-        self.vis_init = False
 
 
     def store_image_selector(self):
 
-        fx = float(1229.4285612615463)
-        fy = float(1229.4285612615463)
-        cx = float(640)
-        cy = float(360)
-        self.selector_u = numpy.zeros((720, 1280), dtype = numpy.float32)
-        self.selector_v = numpy.zeros((720, 1280), dtype = numpy.float32)
-        for v in range(720):
-            for u in range(1280):
+        fx = float(self.config.Camera.fx)
+        fy = float(self.config.Camera.fy)
+        cx = float(self.config.Camera.cx)
+        cy = float(self.config.Camera.cy)
+        self.selector_u = numpy.zeros((self.config.Camera.height, self.config.Camera.width), dtype = numpy.float32)
+        self.selector_v = numpy.zeros((self.config.Camera.height, self.config.Camera.width), dtype = numpy.float32)
+        for v in range(self.config.Camera.height):
+            for u in range(self.config.Camera.width):
                 self.selector_u[v, u] = (u - cx) / fx
                 self.selector_v[v, u] = (v - cy) / fy
 
@@ -79,14 +76,13 @@ class InferenceModule (yarp.RFModule):
 
         self.depth_in.close()
         self.mask_in.close()
-        self.vis.destroy_window()
 
         return True
 
 
     def getPeriod(self):
 
-        return self.options.period
+        return self.config.Module.period
 
 
     def updateModule(self):
@@ -101,14 +97,14 @@ class InferenceModule (yarp.RFModule):
             starter.record()
 
             self.depth_image.copy(depth)
-            depth_frame = numpy.frombuffer(self.depth_buffer, dtype=numpy.float32).reshape(self.options.height, self.options.width)
+            depth_frame = numpy.frombuffer(self.depth_buffer, dtype=numpy.float32).reshape(self.config.Camera.height, self.config.Camera.width)
 
             self.mask_image.copy(mask)
-            mask_frame = numpy.frombuffer(self.mask_buffer, dtype=numpy.uint8).reshape(self.options.height, self.options.width)
+            mask_frame = numpy.frombuffer(self.mask_buffer, dtype=numpy.uint8).reshape(self.config.Camera.height, self.config.Camera.width)
 
             mask_selector = mask_frame != 0
-            depth_valid_up_selector = depth_frame < 1.0
-            depth_valid_down_selector = depth_frame > 0.3
+            depth_valid_up_selector = depth_frame < self.config.Depth.upper_bound
+            depth_valid_down_selector = depth_frame > self.config.Depth.lower_bound
             valid_selector = mask_selector & depth_valid_up_selector & depth_valid_down_selector
             z = depth_frame[valid_selector]
             x_z = self.selector_u[valid_selector]
@@ -126,54 +122,23 @@ class InferenceModule (yarp.RFModule):
                 complete = complete.squeeze(0).cpu().numpy()
                 complete = Denormalize(Config.Processing)(complete, ctx)
 
-                if not self.vis_init:
-                    self.vis_init = True
-                    self.cloud_vis_in = self.to_point_cloud(cloud, [33 / 255, 150 / 255, 243 / 255])
-                    self.vis.add_geometry(self.cloud_vis_in)
+                self.yarp_cloud_source = numpy.zeros((complete.shape[0], 4), dtype = numpy.float32)
+                self.yarp_cloud_source[:, 0:3] = complete
+                yarp_cloud = yarp.ImageFloat()
+                yarp_cloud.resize(self.yarp_cloud_source.shape[1], self.yarp_cloud_source.shape[0])
+                yarp_cloud.setExternal(self.yarp_cloud_source.data, self.yarp_cloud_source.shape[1], self.yarp_cloud_source.shape[0])
+                self.cloud_out.write(yarp_cloud)
 
-                    self.cloud_vis_out = self.to_point_cloud(complete, [100 / 255, 10 / 255, 10 / 255])
-                    self.vis.add_geometry(self.cloud_vis_out)
-                else:
-                    self.cloud_vis_in = self.update_point_cloud(self.cloud_vis_in, cloud, [33 / 255, 150 / 255, 243 / 255])
-                    self.vis.update_geometry(self.cloud_vis_in)
-
-                    self.cloud_vis_out = self.update_point_cloud(self.cloud_vis_out, complete, [100 / 255, 10 / 255, 10 / 255])
-                    self.vis.update_geometry(self.cloud_vis_out)
 
             ender.record()
             torch.cuda.synchronize()
             elapsed = starter.elapsed_time(ender) / 1000.0
             # print(1.0 / elapsed)
 
-        self.vis.poll_events()
-        self.vis.update_renderer()
-
         return True
 
 
-    def to_point_cloud(self, points, color):
-
-        cloud = o3d.geometry.PointCloud()
-        cloud.points = o3d.utility.Vector3dVector(points)
-        cloud = cloud.paint_uniform_color(color)
-
-        return cloud
-
-
-    def update_point_cloud(self, cloud, points, color):
-
-        cloud.points = o3d.utility.Vector3dVector(points)
-        cloud = cloud.paint_uniform_color(color)
-
-        return cloud
-
-
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--gpu_id', type = int, default = '0')
-    parser.add_argument('--period', type = float, default = 0.016)
-
-    options = parser.parse_args()
-
-    module = InferenceModule(options)
+    config = IMConfig()
+    module = InferenceModule(config)
     module.runModule()
