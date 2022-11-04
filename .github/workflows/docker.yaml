@@ -1,0 +1,22 @@
+name: Publish Docker Image
+
+on: [workflow_dispatch]
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@main
+    - name: Set Swap Space
+      uses: pierotofy/set-swap-space@master
+      with:
+        swap-size-gb: 10
+    - name: Publish to Registry
+      uses: elgohr/Publish-Docker-Github-Action@main
+      with:
+        name: xenvre/hyperpcr
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+        workdir: dockerfiles
+        dockerfile: Dockerfile
+        registry: ghcr.io
