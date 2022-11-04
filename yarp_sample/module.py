@@ -117,11 +117,12 @@ class InferenceModule(yarp.RFModule):
                 cloud[:, 1] = y_z * z
                 cloud[:, 2] = z
 
-                labels, _ = DBSCAN(cloud.astype(dtype = numpy.float64), eps = self.config.DBSCAN.eps, min_samples = self.config.DBSCAN.min_samples)
-                labels_count = [list(labels).count(i) for i in range(0, labels.max() + 1)]
-                label_max = numpy.argmax(labels_count)
-                if labels_count[label_max] > 0:
-                    cloud = cloud[labels == label_max]
+                if self.config.DBSCAN.enable:
+                    labels, _ = DBSCAN(cloud.astype(dtype = numpy.float64), eps = self.config.DBSCAN.eps, min_samples = self.config.DBSCAN.min_samples)
+                    labels_count = [list(labels).count(i) for i in range(0, labels.max() + 1)]
+                    label_max = numpy.argmax(labels_count)
+                    if labels_count[label_max] > 0:
+                        cloud = cloud[labels == label_max]
 
                 partial, ctx = Normalize(Config.Processing)(cloud)
                 partial = torch.tensor(partial, dtype=torch.float32).cuda().unsqueeze(0)

@@ -9,6 +9,7 @@ class Config:
         cy = float(246.352935791015625)
 
     class DBSCAN:
+        enable = bool(True)
         eps = float(0.01)
         min_samples = int(100)
 
