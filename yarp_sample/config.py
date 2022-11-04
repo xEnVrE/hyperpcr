@@ -1,12 +1,12 @@
 class Config:
 
     class Camera:
-        width = int(1280)
-        height = int(720)
-        fx = float(1229.4285612615463)
-        fy = float(1229.4285612615463)
-        cx = float(640)
-        cy = float(360)
+        width = int(640)
+        height = int(480)
+        fx = float(618.0714111328125)
+        fy = float(617.783447265625)
+        cx = float(305.902252197265625)
+        cy = float(246.352935791015625)
 
     class Depth:
         lower_bound = float(0.3)
