@@ -11,7 +11,9 @@
 #include <RobotsViz/VtkContainer.h>
 
 #include <string>
+#include <vector>
 
+#include <yarp/os/Bottle.h>
 #include <yarp/os/ResourceFinder.h>
 
 
@@ -23,6 +25,8 @@ public:
     void run();
 
 private:
+    std::vector<unsigned char> load_vector_uchar(const yarp::os::Bottle& resource, const std::string& key, const std::size_t size);
+
     std::unique_ptr<RobotsViz::VtkContainer> vtk_container_;
 
     const std::string log_name_ = "hyperpcr-viewer";

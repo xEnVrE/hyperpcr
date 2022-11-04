@@ -47,6 +47,11 @@ Viewer::Viewer(const ResourceFinder& resource_finder)
     valid_camera_values &= !(camera_cx.isNull()) && camera_cx.isFloat64();
     valid_camera_values &= !(camera_cy.isNull()) && camera_cy.isFloat64();
 
+    const Bottle& reconstruction_bottle = resource_finder.findGroup("RECONSTRUCTION");
+    if (reconstruction_bottle.isNull())
+        throw(std::runtime_error(log_name_ + "::ctor. Malformed configuration file: cannot find RECONSTRUCTION section."));
+    auto color = load_vector_uchar(reconstruction_bottle, "color", 3);
+
     std::unique_ptr<Camera> camera;
     if (camera_source == "YARP")
     {
@@ -75,7 +80,6 @@ Viewer::Viewer(const ResourceFinder& resource_finder)
     auto pc = std::make_unique<PointCloudCamera>(std::move(camera), far_plane, subsampling_radius);
 
     /* Initialize reconstructed point cloud source. */
-    const std::vector<unsigned char> color {255, 0, 0};
     auto reconstructed_pc = std::make_unique<PointCloud>("/" + port_prefix + "/reconstructed_cloud:i", color);
 
     /* Initialize the VTK container and add the clouds */
@@ -91,4 +95,33 @@ Viewer::Viewer(const ResourceFinder& resource_finder)
 void Viewer::run()
 {
     vtk_container_->run();
+}
+
+
+std::vector<unsigned char> Viewer::load_vector_uchar(const Bottle& resource, const std::string& key, const std::size_t size)
+{
+    if (resource.find(key).isNull())
+        throw(std::runtime_error(log_name_ + "::load_vector_uchar. Cannot find key " + key + "."));
+
+    Bottle* b = resource.find(key).asList();
+    if (b == nullptr)
+        throw(std::runtime_error(log_name_ + "::load_vector_uchar. Cannot get vector having key " + key + " as a list."));
+
+    if (b->size() != size)
+        throw(std::runtime_error(log_name_ + "::load_vector_uchar. Vector having key " + key + " has size "  + std::to_string(b->size()) + " (expected is " + std::to_string(size) + ")."));
+
+    std::vector<unsigned char> vector(size);
+    for (std::size_t i = 0; i < b->size(); i++)
+    {
+        Value item_v = b->get(i);
+        if (item_v.isNull())
+            throw(std::runtime_error(log_name_ + "::load_vector_uchar." + std::to_string(i) + "-th element of of vector having key " + key + " is null."));
+
+        if (!item_v.isInt32())
+            throw(std::runtime_error(log_name_ + "::load_vector_uchar." + std::to_string(i) + "-th element of of vector having key " + key + " is not a integer."));
+
+        vector[i] = item_v.asInt32();
+    }
+
+    return vector;
 }
