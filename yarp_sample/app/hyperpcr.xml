@@ -1,0 +1,40 @@
+<application>
+    <name>HyperPCR YARP</name>
+
+    <connection>
+        <from>/depthCamera/depthImage:o</from>
+        <to>/hyperpcr/depth:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/depthCamera/rgbImage:o</from>
+        <to>/detectron2/rgb:i</to>
+        <protocol>mjpeg</protocol>
+    </connection>
+
+    <connection>
+        <from>/detectron2/mask:o</from>
+        <to>/hyperpcr/mask:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/depthCamera/depthImage:o</from>
+        <to>/hyperpcr-viewer/depth:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/depthCamera/rgbImage:o</from>
+        <to>/hyperpcr-viewer/rgb:i</to>
+        <protocol>mjpeg</protocol>
+    </connection>
+
+    <connection>
+        <from>/hyperpcr/cloud:o</from>
+        <to>/hyperpcr-viewer/reconstructed_cloud:i</to>
+        <protocol>unix_stream</protocol>
+    </connection>
+
+</application>
