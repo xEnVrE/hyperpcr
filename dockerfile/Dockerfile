@@ -95,8 +95,18 @@ RUN source /robotology-superbuild/build/install/share/robotology-superbuild/setu
 # Configure robotology-superbuild
 RUN echo "source /robotology-superbuild/build/install/share/robotology-superbuild/setup.sh" >> /home/user/.bashrc
 
-# Configure exports
-RUN echo "export YARP_RUNTIME_DIR=/home/user/.runtime" >> /home/user/.bashrc
+# Several configurations
+RUN mkdir -p /home/user/.local/share/yarp/contexts && \
+    mkdir -p /home/user/.local/share/yarp/applications && \
+    mkdir /home/user/.runtime && \
+#
+# exports
+    echo "export YARP_RUNTIME_DIR=/home/user/.runtime" >> /home/user/.bashrc && \
+#
+# hyperpcr-viewer xml and config
+    cp /home/user/hyperpcr/yarp_sample/app/hyperpcr.xml /home/user/.local/share/yarp/applications/hyperpcr.xml && \
+    mkdir /home/user/.local/share/yarp/contexts/hyperpcr-viewer && \
+    cp /home/user/hyperpcr/src/viewer/config/config.ini.template /home/user/.local/share/yarp/contexts/hyperpcr-viewer/config.ini
 
 # Launch bash from /home/user
 WORKDIR /home/user
