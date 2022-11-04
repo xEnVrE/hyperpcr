@@ -1,15 +1,15 @@
-fps
+fps 30.0
 
 [CAMERA]
-source
-width
-height
-fx
-fy
-cx
-cy
-far_plane
-subsampling_radius
+source YARP
+width 640
+height 480
+fx 618.0714111328125
+fy 617.783447265625
+cx 305.902252197265625
+cy 246.352935791015625
+far_plane 3.0
+subsampling_radius -1
 
 [RECONSTRUCTION]
 color (255, 0, 0)
