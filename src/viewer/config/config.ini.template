@@ -10,3 +10,6 @@ cx
 cy
 far_plane
 subsampling_radius
+
+[RECONSTRUCTION]
+color (255, 0, 0)

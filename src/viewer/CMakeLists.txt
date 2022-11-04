@@ -14,10 +14,12 @@ find_package(YARP REQUIRED COMPONENTS os)
 find_package(RobotsViz)
 
 set(${EXE_TARGET_NAME}_HDR
+    include/PointCloud.h
     include/Viewer.h
 )
 
 set(${EXE_TARGET_NAME}_SRC
+    src/PointCloud.cpp
     src/Viewer.cpp
     src/main.cpp
 )

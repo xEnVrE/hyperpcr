@@ -6,6 +6,7 @@
  */
 
 #include <Viewer.h>
+#include <PointCloud.h>
 
 #include <RobotsIO/Camera/Camera.h>
 #include <RobotsIO/Camera/CameraParameters.h>
@@ -25,7 +26,6 @@ Viewer::Viewer(const ResourceFinder& resource_finder)
 {
     const std::string port_prefix = "hyperpcr-viewer";
     const double fps = resource_finder.check("fps", Value(30.0)).asFloat64();
-    std::cout << fps << std::endl;
 
     const Bottle& camera_bottle = resource_finder.findGroup("CAMERA");
     if (camera_bottle.isNull())
@@ -74,12 +74,17 @@ Viewer::Viewer(const ResourceFinder& resource_finder)
     const double subsampling_radius = camera_bottle.check("subsampling_radius", Value(-1)).asFloat64();
     auto pc = std::make_unique<PointCloudCamera>(std::move(camera), far_plane, subsampling_radius);
 
-    /* Initialize the VTK point cloud */
-    auto vtk_pc = std::make_unique<VtkPointCloud>(std::move(pc));
-    vtk_container_ = std::make_unique<VtkContainer>(1.0 / fps, 600, 600, false);
+    /* Initialize reconstructed point cloud source. */
+    const std::vector<unsigned char> color {255, 0, 0};
+    auto reconstructed_pc = std::make_unique<PointCloud>("/" + port_prefix + "/reconstructed_cloud:i", color);
 
-    /* Add content to the container. */
+    /* Initialize the VTK container and add the clouds */
+    auto vtk_pc = std::make_unique<VtkPointCloud>(std::move(pc));
+    auto vtk_reconstructed_pc = std::make_unique<VtkPointCloud>(std::move(reconstructed_pc));
+
+    vtk_container_ = std::make_unique<VtkContainer>(1.0 / fps, 600, 600, false);
     vtk_container_->add_content("point_cloud", std::move(vtk_pc));
+    vtk_container_->add_content("reconstruction", std::move(vtk_reconstructed_pc));
 }
 
 
