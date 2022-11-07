@@ -12,6 +12,7 @@ from pcr.model import PCRNetwork as Model
 from pcr.utils import Normalize, Denormalize
 from pcr.default_config import Config
 from pcr.misc import download_checkpoint, download_asset
+from pose_filter import PoseFilter
 
 
 class InferenceModule(yarp.RFModule):
@@ -36,6 +37,9 @@ class InferenceModule(yarp.RFModule):
         self.model.load_state_dict(torch.load(ckpt_path)['state_dict'])
         self.model.cuda()
         self.model.eval()
+
+        # Initialize pose filter
+        self.pose_filter = PoseFilter()
 
         # Initialize YARP ports
         self.depth_in = yarp.BufferedPortImageFloat()
@@ -141,6 +145,7 @@ class InferenceModule(yarp.RFModule):
                 complete = Denormalize(Config.Processing)(complete, ctx)
 
                 pose = self.get_obb_pose(complete)
+                pose = self.pose_filter.step(pose)
 
                 self.send_output(complete, pose)
 
