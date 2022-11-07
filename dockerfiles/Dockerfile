@@ -93,10 +93,10 @@ RUN source /robotology-superbuild/build/install/share/robotology-superbuild/setu
     pip install --upgrade pip && \
     pip install . && \
     # install cuDF and cuML
-    pip uninstall jupyter-client && \
-    pip install cudf-cu11 dask-cudf-cu11 --extra-index-url=https://pypi.ngc.nvidia.com && \
-    pip install cuml-cu11 --extra-index-url=https://pypi.ngc.nvidia.com && \
-    pip uninstall --yes cupy-cuda115 && pip install cupy-cuda111 && \
+    # pip uninstall --yes jupyter-client && \
+    # pip install cudf-cu11 dask-cudf-cu11 --extra-index-url=https://pypi.ngc.nvidia.com && \
+    # pip install cuml-cu11 --extra-index-url=https://pypi.ngc.nvidia.com && \
+    # pip uninstall --yes cupy-cuda115 && pip install cupy-cuda111 && \
     #
     deactivate
 
@@ -111,10 +111,10 @@ RUN mkdir -p /home/user/.local/share/yarp/contexts && \
 # exports
     echo "export PATH=\$PATH:/home/user/hyperpcr/install/bin" >> /home/user/.bashrc && \
     echo "PYTHONPATH=\$PYTHONPATH:/home/user/hyperpcr" >> /home/user/.bashrc && \
-    echo "export YARP_RUNTIME_DIR=/home/user/.runtime" >> /home/user/.bashrc
+    echo "export YARP_RUNTIME_DIR=/home/user/.runtime" >> /home/user/.bashrc && \
 #
 # hyperpcr-viewer xml and config
-    cp /home/user/hyperpcr/yarp_sample/app/hyperpcr.xml /home/user/.local/share/yarp/applications/hyperpcr.xml && \
+    cp /home/user/hyperpcr/pcr_yarp/app/hyperpcr.xml /home/user/.local/share/yarp/applications/hyperpcr.xml && \
     mkdir /home/user/.local/share/yarp/contexts/hyperpcr-viewer && \
     cp /home/user/hyperpcr/src/viewer/config/config.ini.template /home/user/.local/share/yarp/contexts/hyperpcr-viewer/config.ini
 
