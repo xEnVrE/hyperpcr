@@ -38,6 +38,15 @@ bool PointCloud::freeze(const bool& blocking)
         colors_(2, i) = color_[0];
     }
 
+    VectorXd position = data.leftCols(3).row(data.rows() - 2);
+    VectorXd axis_angle = data.leftCols(4).row(data.rows() - 1);
+
+    pose_ = Translation<double, 3>(position);
+    AngleAxisd aa;
+    aa.axis() = axis_angle.head<3>();
+    aa.angle() = axis_angle[3];
+    pose_.rotate(aa);
+
     return true;
 }
 
@@ -51,4 +60,10 @@ MatrixXd PointCloud::points()
 Matrix<unsigned char, Dynamic, Dynamic> PointCloud::colors()
 {
     return colors_;
+}
+
+
+std::tuple<bool, Eigen::Transform<double, 3, Eigen::Affine>> PointCloud::pose()
+{
+    return std::make_tuple(true, pose_);
 }

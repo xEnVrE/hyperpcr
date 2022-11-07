@@ -22,6 +22,8 @@ namespace RobotsViz {
 class PointCloud : public RobotsViz::PointCloudSource
 {
 public:
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
     PointCloud(const std::string& port_name, const std::vector<unsigned char>& color);
 
     bool freeze(const bool& blocking);
@@ -29,6 +31,8 @@ public:
     Eigen::MatrixXd points()  override;
 
     Eigen::Matrix<unsigned char, Eigen::Dynamic, Eigen::Dynamic> colors()  override;
+
+    std::tuple<bool, Eigen::Transform<double, 3, Eigen::Affine>> pose() override;
 
 private:
     RobotsIO::Utils::FloatMatrixYarpPort port_;
@@ -38,6 +42,8 @@ private:
     Eigen::MatrixXd points_;
 
     Eigen::Matrix<unsigned char, Eigen::Dynamic, Eigen::Dynamic> colors_;
+
+    Eigen::Transform<double, 3, Eigen::Affine> pose_;
 };
 
 #endif /* POINTCLOUD_H */
