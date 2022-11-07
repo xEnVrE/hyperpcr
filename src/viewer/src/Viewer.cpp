@@ -85,6 +85,7 @@ Viewer::Viewer(const ResourceFinder& resource_finder)
     /* Initialize the VTK container and add the clouds */
     auto vtk_pc = std::make_unique<VtkPointCloud>(std::move(pc));
     auto vtk_reconstructed_pc = std::make_unique<VtkPointCloud>(std::move(reconstructed_pc));
+    vtk_reconstructed_pc->get_reference_frame().set_visibility(true);
 
     vtk_container_ = std::make_unique<VtkContainer>(1.0 / fps, 600, 600, false);
     vtk_container_->add_content("point_cloud", std::move(vtk_pc));
