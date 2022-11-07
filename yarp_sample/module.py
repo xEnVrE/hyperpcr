@@ -94,14 +94,14 @@ class InferenceModule(yarp.RFModule):
         cloud.points = o3d.utility.Vector3dVector(points)
 
         center = cloud.get_center()
-        bbox = cloud.get_oriented_bounding_box()
 
+        bbox = cloud.get_oriented_bounding_box()
         q = pyquaternion.Quaternion(matrix = bbox.R)
         axis_angle = numpy.zeros(4)
         axis_angle[:3] = q.axis
         axis_angle[3] = q.angle
 
-        return position, axis_angle
+        return center, axis_angle
 
 
     def updateModule(self):
