@@ -1,7 +1,9 @@
 import argparse
 import copy
+import open3d as o3d
 import os
 import numpy
+import pyquaternion
 import torch
 import yarp
 from config import Config as IMConfig
@@ -86,6 +88,22 @@ class InferenceModule(yarp.RFModule):
         return self.config.Module.period
 
 
+    def get_obb_pose(points):
+
+        cloud = o3d.geometry.PointCloud()
+        cloud.points = o3d.utility.Vector3dVector(points)
+
+        center = cloud.get_center()
+        bbox = cloud.get_oriented_bounding_box()
+
+        q = pyquaternion.Quaternion(matrix = bbox.R)
+        axis_angle = numpy.zeros(4)
+        axis_angle[:3] = q.axis
+        axis_angle[3] = q.angle
+
+        return position, axis_angle
+
+
     def updateModule(self):
 
         depth = self.depth_in.read(False)
@@ -131,8 +149,15 @@ class InferenceModule(yarp.RFModule):
                 complete = complete.squeeze(0).cpu().numpy()
                 complete = Denormalize(Config.Processing)(complete, ctx)
 
-                self.yarp_cloud_source = numpy.zeros((complete.shape[0], 4), dtype = numpy.float32)
-                self.yarp_cloud_source[:, 0:3] = complete
+                position, orientation = get_obb_pose(complete)
+
+                # we allocate two additional columns to send also the pose of the oriented bounding box
+                total_size = complete.shape[0] + 2
+                self.yarp_cloud_source = numpy.zeros((total_size, 4), dtype = numpy.float32)
+                self.yarp_cloud_source[:complete.shape[0], 0:3] = complete
+                self.yarp_cloud_source[complete.shape[0], 0:3] = position
+                self.yarp_cloud_source[complete.shape[0] + 1, 0:4] = orientation
+
                 yarp_cloud = yarp.ImageFloat()
                 yarp_cloud.resize(self.yarp_cloud_source.shape[1], self.yarp_cloud_source.shape[0])
                 yarp_cloud.setExternal(self.yarp_cloud_source.data, self.yarp_cloud_source.shape[1], self.yarp_cloud_source.shape[0])
