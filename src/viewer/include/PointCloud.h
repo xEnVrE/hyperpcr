@@ -24,12 +24,20 @@ class PointCloud : public RobotsViz::PointCloudSource
 public:
     PointCloud(const std::string& port_name, const std::vector<unsigned char>& color);
 
-    std::tuple<bool, Eigen::MatrixXd, Eigen::Matrix<unsigned char, Eigen::Dynamic, Eigen::Dynamic>> points(const bool& blocking) override;
+    bool freeze(const bool& blocking);
+
+    Eigen::MatrixXd points()  override;
+
+    Eigen::Matrix<unsigned char, Eigen::Dynamic, Eigen::Dynamic> colors()  override;
 
 private:
     RobotsIO::Utils::FloatMatrixYarpPort port_;
 
     const std::vector<unsigned char> color_;
+
+    Eigen::MatrixXd points_;
+
+    Eigen::Matrix<unsigned char, Eigen::Dynamic, Eigen::Dynamic> colors_;
 };
 
 #endif /* POINTCLOUD_H */

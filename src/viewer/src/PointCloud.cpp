@@ -19,24 +19,36 @@ PointCloud::PointCloud(const std::string& port_name, const std::vector<unsigned 
 {}
 
 
-std::tuple<bool, MatrixXd, Matrix<unsigned char, Dynamic, Dynamic>> PointCloud::points(const bool& blocking)
+
+bool PointCloud::freeze(const bool& blocking)
 {
-    auto false_tuple = std::make_tuple(false, Eigen::MatrixXd(), Eigen::Matrix<unsigned char, Dynamic, Dynamic>());
 
-    bool valid = port_.freeze(blocking);
-    if (!valid)
-        return false_tuple;
+    if (!port_.freeze(blocking))
+        return false;
 
-    MatrixXd points = port_.matrix_as_double().leftCols(3);
-    points.transposeInPlace();
+    MatrixXd data = port_.matrix_as_double();
+    points_ = data.leftCols(3).topRows(data.rows() - 2);
+    points_.transposeInPlace();
 
-    Matrix<unsigned char, -1, -1> colors(3, points.cols());
-    for (std::size_t i = 0; i < points.cols(); i++)
+    colors_ = Matrix<unsigned char, Dynamic, Dynamic>(3, points_.cols());
+    for (std::size_t i = 0; i < points_.cols(); i++)
     {
-        colors(0, i) = color_[2];
-        colors(1, i) = color_[1];
-        colors(2, i) = color_[0];
+        colors_(0, i) = color_[2];
+        colors_(1, i) = color_[1];
+        colors_(2, i) = color_[0];
     }
 
-    return std::make_tuple(true, points, colors);
+    return true;
+}
+
+
+MatrixXd PointCloud::points()
+{
+    return points_;
+}
+
+
+Matrix<unsigned char, Dynamic, Dynamic> PointCloud::colors()
+{
+    return colors_;
 }
