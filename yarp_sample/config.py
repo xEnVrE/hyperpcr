@@ -17,6 +17,9 @@ class Config:
         lower_bound = float(0.3)
         upper_bound = float(1.0)
 
+    class PoseFiltering:
+        enable = bool(True)
+
     class Module:
         gpu_id = int(0)
         period = float(0.1)

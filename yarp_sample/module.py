@@ -145,7 +145,8 @@ class InferenceModule(yarp.RFModule):
                 complete = Denormalize(Config.Processing)(complete, ctx)
 
                 pose = self.get_obb_pose(complete)
-                pose = self.pose_filter.step(pose)
+                if self.config.PoseFiltering.enable:
+                    pose = self.pose_filter.step(pose)
 
                 self.send_output(complete, pose)
 
