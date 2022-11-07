@@ -19,7 +19,7 @@ ENV LANG=en_US.UTF-8
 
 # Install essentials
 RUN apt update && \
-    apt install --no-install-recommends -y -qq apt-utils build-essential ca-certificates cmake cmake-curses-gui curl emacs-nox git git-lfs glmark2 gnupg2 htop iputils-ping jq libssl-dev libusb-1.0-0-dev lsb-release mesa-utils nano psmisc python3-pip python3-virtualenv sudo unzip vim wget zip && \
+    apt install --no-install-recommends -y -qq apt-utils build-essential ca-certificates cmake cmake-curses-gui curl emacs-nox git git-lfs glmark2 gnupg2 gpg htop iputils-ping jq libssl-dev libusb-1.0-0-dev libz-dev lsb-release mesa-utils nano psmisc python3-pip python3-virtualenv sudo unzip vim wget zip && \
     rm -rf /var/lib/apt/lists/*
 
 # Install GitHub cli
@@ -42,7 +42,7 @@ RUN git config --global user.name "user" && \
     cd robotology-superbuild && \
     git checkout v2022.09.0 && \
     mkdir build && cd build && \
-    cmake -DROBOTOLOGY_ENABLE_CORE=ON -DROBOTOLOGY_USES_GAZEBO=OFF -DROBOTOLOGY_USES_PYTHON=ON -DROBOTOLOGY_USES_LUA=ON -DYCM_EP_ADDITIONAL_CMAKE_ARGS:STRING="-DICUB_COMPILE_BINDINGS:BOOL=ON -DCREATE_PYTHON:BOOL=ON -DENABLE_yarpmod_RGBDSensorWrapper:BOOL=ON -DENABLE_yarpmod_RGBDSensorClient:BOOL=ON -DENABLE_yarpcar_mjpeg:BOOL=ON -DENABLE_yarppm_depthimage_to_rgb:BOOL=ON" ../ && \
+    cmake -DROBOTOLOGY_ENABLE_CORE=ON -DROBOTOLOGY_USES_GAZEBO=OFF -DROBOTOLOGY_USES_PYTHON=ON -DROBOTOLOGY_USES_LUA=ON -DYCM_EP_ADDITIONAL_CMAKE_ARGS:STRING="-DICUB_COMPILE_BINDINGS:BOOL=ON -DCREATE_PYTHON:BOOL=ON -DENABLE_yarpmod_RGBDSensorWrapper:BOOL=ON -DENABLE_yarpmod_RGBDSensorClient:BOOL=ON -DENABLE_yarpcar_mjpeg:BOOL=ON -DENABLE_yarppm_depthimage_to_rgb:BOOL=ON -DENABLE_yarppm_depthimage_compression_zlib:BOOL=ON" ../ && \
     make -j$NJOBS
 
 # Build RobotsIO
@@ -90,6 +90,12 @@ RUN source /robotology-superbuild/build/install/share/robotology-superbuild/setu
     . env/bin/activate && \
     pip install --upgrade pip && \
     pip install . && \
+    # install cuDF and cuML
+    pip uninstall jupyter-client && \
+    pip install cudf-cu11 dask-cudf-cu11 --extra-index-url=https://pypi.ngc.nvidia.com && \
+    pip install cuml-cu11 --extra-index-url=https://pypi.ngc.nvidia.com && \
+    pip uninstall --yes cupy-cuda115 && pip install cupy-cuda111 && \
+    #
     deactivate
 
 # Configure robotology-superbuild
