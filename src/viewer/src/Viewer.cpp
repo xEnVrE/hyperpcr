@@ -51,6 +51,7 @@ Viewer::Viewer(const ResourceFinder& resource_finder)
     if (reconstruction_bottle.isNull())
         throw(std::runtime_error(log_name_ + "::ctor. Malformed configuration file: cannot find RECONSTRUCTION section."));
     auto color = load_vector_uchar(reconstruction_bottle, "color", 3);
+    auto reference_frame_length = reconstruction_bottle.check("reference_frame_length", Value(0.1)).asFloat64();
 
     std::unique_ptr<Camera> camera;
     if (camera_source == "YARP")
@@ -85,7 +86,10 @@ Viewer::Viewer(const ResourceFinder& resource_finder)
     /* Initialize the VTK container and add the clouds */
     auto vtk_pc = std::make_unique<VtkPointCloud>(std::move(pc));
     auto vtk_reconstructed_pc = std::make_unique<VtkPointCloud>(std::move(reconstructed_pc));
+
+    /* Configure the reference frame attached to the reconstructed cloud. */
     vtk_reconstructed_pc->get_reference_frame().set_visibility(true);
+    vtk_reconstructed_pc->get_reference_frame().set_length(reference_frame_length);
 
     vtk_container_ = std::make_unique<VtkContainer>(1.0 / fps, 600, 600, false);
     vtk_container_->add_content("point_cloud", std::move(vtk_pc));

@@ -13,3 +13,4 @@ subsampling_radius -1
 
 [RECONSTRUCTION]
 color (255, 0, 0)
+reference_frame_length 1.0
