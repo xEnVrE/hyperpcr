@@ -88,7 +88,7 @@ class InferenceModule(yarp.RFModule):
         return self.config.Module.period
 
 
-    def get_obb_pose(points):
+    def get_obb_pose(self, points):
 
         cloud = o3d.geometry.PointCloud()
         cloud.points = o3d.utility.Vector3dVector(points)
@@ -149,7 +149,7 @@ class InferenceModule(yarp.RFModule):
                 complete = complete.squeeze(0).cpu().numpy()
                 complete = Denormalize(Config.Processing)(complete, ctx)
 
-                position, orientation = get_obb_pose(complete)
+                position, orientation = self.get_obb_pose(complete)
 
                 # we allocate two additional columns to send also the pose of the oriented bounding box
                 total_size = complete.shape[0] + 2
