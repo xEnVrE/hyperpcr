@@ -93,15 +93,11 @@ class InferenceModule(yarp.RFModule):
         cloud = o3d.geometry.PointCloud()
         cloud.points = o3d.utility.Vector3dVector(points)
 
-        center = cloud.get_center()
-
         bbox = cloud.get_oriented_bounding_box()
-        q = pyquaternion.Quaternion(matrix = bbox.R)
-        axis_angle = numpy.zeros(4)
-        axis_angle[:3] = q.axis
-        axis_angle[3] = q.angle
+        pose = pyquaternion.Quaternion(matrix = bbox.R).transformation_matrix
+        pose[0:3, 3] = cloud.get_center()
 
-        return center, axis_angle
+        return pose
 
 
     def updateModule(self):
@@ -149,20 +145,9 @@ class InferenceModule(yarp.RFModule):
                 complete = complete.squeeze(0).cpu().numpy()
                 complete = Denormalize(Config.Processing)(complete, ctx)
 
-                position, orientation = self.get_obb_pose(complete)
+                pose = self.get_obb_pose(complete)
 
-                # we allocate two additional columns to send also the pose of the oriented bounding box
-                total_size = complete.shape[0] + 2
-                self.yarp_cloud_source = numpy.zeros((total_size, 4), dtype = numpy.float32)
-                self.yarp_cloud_source[:complete.shape[0], 0:3] = complete
-                self.yarp_cloud_source[complete.shape[0], 0:3] = position
-                self.yarp_cloud_source[complete.shape[0] + 1, :] = orientation
-
-                yarp_cloud = yarp.ImageFloat()
-                yarp_cloud.resize(self.yarp_cloud_source.shape[1], self.yarp_cloud_source.shape[0])
-                yarp_cloud.setExternal(self.yarp_cloud_source.data, self.yarp_cloud_source.shape[1], self.yarp_cloud_source.shape[0])
-                self.cloud_out.write(yarp_cloud)
-
+                self.send_output(complete, pose)
 
             ender.record()
             torch.cuda.synchronize()
@@ -170,6 +155,27 @@ class InferenceModule(yarp.RFModule):
             print(1.0 / elapsed)
 
         return True
+
+
+    def send_output(self, cloud, pose):
+
+        # convert pose in position, axis, angle
+        q = pyquaternion.Quaternion(matrix = pose[0:3, 0:3])
+        axis_angle = numpy.zeros(4)
+        axis_angle[:3] = q.axis
+        axis_angle[3] = q.angle
+
+        # we allocate two additional columns to send also the pose of the oriented bounding box
+        total_size = cloud.shape[0] + 2
+        self.yarp_cloud_source = numpy.zeros((total_size, 4), dtype = numpy.float32)
+        self.yarp_cloud_source[:cloud.shape[0], 0:3] = cloud
+        self.yarp_cloud_source[cloud.shape[0], 0:3] = pose[0:3, 3]
+        self.yarp_cloud_source[cloud.shape[0] + 1, :] = axis_angle
+
+        yarp_cloud = yarp.ImageFloat()
+        yarp_cloud.resize(self.yarp_cloud_source.shape[1], self.yarp_cloud_source.shape[0])
+        yarp_cloud.setExternal(self.yarp_cloud_source.data, self.yarp_cloud_source.shape[1], self.yarp_cloud_source.shape[0])
+        self.cloud_out.write(yarp_cloud)
 
 
 if __name__ == '__main__':
