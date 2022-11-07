@@ -156,7 +156,7 @@ class InferenceModule(yarp.RFModule):
                 self.yarp_cloud_source = numpy.zeros((total_size, 4), dtype = numpy.float32)
                 self.yarp_cloud_source[:complete.shape[0], 0:3] = complete
                 self.yarp_cloud_source[complete.shape[0], 0:3] = position
-                self.yarp_cloud_source[complete.shape[0] + 1, 0:4] = orientation
+                self.yarp_cloud_source[complete.shape[0] + 1, :] = orientation
 
                 yarp_cloud = yarp.ImageFloat()
                 yarp_cloud.resize(self.yarp_cloud_source.shape[1], self.yarp_cloud_source.shape[0])
