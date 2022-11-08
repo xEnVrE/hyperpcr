@@ -110,7 +110,8 @@ RUN mkdir -p /home/user/.local/share/yarp/contexts && \
 #
 # exports
     echo "export PATH=\$PATH:/home/user/hyperpcr/install/bin" >> /home/user/.bashrc && \
-    echo "export YARP_RUNTIME_DIR=/home/user/.runtime" >> /home/user/.bashrc && \
+    echo "PYTHONPATH=\$PYTHONPATH:/home/user/hyperpcr" >> /home/user/.bashrc && \
+    echo "export YARP_RUNTIME_DIR=/home/user/.runtime" >> /home/user/.bashrc
 #
 # hyperpcr-viewer xml and config
     cp /home/user/hyperpcr/yarp_sample/app/hyperpcr.xml /home/user/.local/share/yarp/applications/hyperpcr.xml && \
