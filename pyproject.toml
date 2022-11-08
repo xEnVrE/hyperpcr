@@ -20,6 +20,9 @@ pyquaternion ="^0"
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
 
+[tool.poetry.scripts]
+pcr_yarp_module = 'pcr_yarp.module:main'
+
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
