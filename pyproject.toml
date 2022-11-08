@@ -1,11 +1,12 @@
 [tool.poetry]
 name = "hyperpcr"
 packages = [
-    {include = "pcr"}
+    {include = "pcr"},
+    {include = "pcr_yarp"}
 ]
 version = "0.3.7"
 description = "Point Cloud Reconstruction with HyperNetwork"
-authors = ["andrearosasco <andrea.rosasco@iit.it>"]
+authors = ["andrearosasco <andrea.rosasco@iit.it>, nicolapiga <nicola.piga@iit.it>"]
 
 [tool.poetry.dependencies]
 python = "^3.6"

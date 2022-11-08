@@ -6,13 +6,13 @@ import numpy
 import pyquaternion
 import torch
 import yarp
-from config import Config as IMConfig
 from dbscan import DBSCAN
 from pcr.model import PCRNetwork as Model
 from pcr.utils import Normalize, Denormalize
 from pcr.default_config import Config
 from pcr.misc import download_checkpoint, download_asset
-from pose_filter import PoseFilter
+from pcr_yarp.config import Config as IMConfig
+from pcr_yarp.pose_filter import PoseFilter
 
 
 class InferenceModule(yarp.RFModule):
