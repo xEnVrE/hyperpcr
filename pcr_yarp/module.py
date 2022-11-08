@@ -1,3 +1,10 @@
+# this makes possible to run this from the yarpmanager
+import os
+this_file_path = os.path.dirname(os.path.abspath(__file__))
+venv_activator_path = os.path.join(this_file_path, '../env/bin/activate_this.py')
+if os.path.exists(venv_activator_path):
+    exec(open(venv_activator_path).read(), {'__file__': venv_activator_path})
+
 import argparse
 import copy
 import open3d as o3d
