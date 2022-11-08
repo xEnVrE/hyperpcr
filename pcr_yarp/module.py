@@ -191,7 +191,11 @@ class InferenceModule(yarp.RFModule):
         self.cloud_out.write(yarp_cloud)
 
 
-if __name__ == '__main__':
+def main():
     config = IMConfig()
     module = InferenceModule(config)
     module.runModule()
+
+
+if __name__ == '__main__':
+    main()
