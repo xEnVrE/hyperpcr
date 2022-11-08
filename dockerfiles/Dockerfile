@@ -91,7 +91,7 @@ RUN source /robotology-superbuild/build/install/share/robotology-superbuild/setu
     virtualenv env && \
     . env/bin/activate && \
     pip install --upgrade pip && \
-    pip install . && \
+    pip install -e . && \
     # install cuDF and cuML
     # pip uninstall --yes jupyter-client && \
     # pip install cudf-cu11 dask-cudf-cu11 --extra-index-url=https://pypi.ngc.nvidia.com && \
@@ -100,18 +100,15 @@ RUN source /robotology-superbuild/build/install/share/robotology-superbuild/setu
     python -c "from pcr.misc import download_checkpoint; download_checkpoint(f'grasping.ckpt')" && \
     deactivate
 
-# Configure robotology-superbuild
-RUN echo "source /robotology-superbuild/build/install/share/robotology-superbuild/setup.sh" >> /home/user/.bashrc
-
 # Several configurations
 RUN mkdir -p /home/user/.local/share/yarp/contexts && \
     mkdir -p /home/user/.local/share/yarp/applications && \
     mkdir /home/user/.runtime && \
 #
 # exports
-    echo "export PATH=\$PATH:/home/user/hyperpcr/install/bin" >> /home/user/.bashrc && \
-    echo "PYTHONPATH=\$PYTHONPATH:/home/user/hyperpcr" >> /home/user/.bashrc && \
+    echo "source /robotology-superbuild/build/install/share/robotology-superbuild/setup.sh" >> /home/user/.bashrc && \
     echo "export YARP_RUNTIME_DIR=/home/user/.runtime" >> /home/user/.bashrc && \
+    echo "source /home/user/hyperpcr/env/bin/activate" >> /home/user/.bashrc && \
 #
 # hyperpcr-viewer xml and config
     cp /home/user/hyperpcr/pcr_yarp/app/hyperpcr.xml /home/user/.local/share/yarp/applications/hyperpcr.xml && \
