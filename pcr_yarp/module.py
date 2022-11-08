@@ -39,7 +39,7 @@ class InferenceModule(yarp.RFModule):
         yarp.RFModule.__init__(self)
 
         # Initialize inference
-        ckpt_path = download_checkpoint(f'grasping.ckpt')
+        ckpt_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'checkpoints', 'grasping.ckpt')
         self.model = Model(config = Config.Model)
         self.model.load_state_dict(torch.load(ckpt_path)['state_dict'])
         self.model.cuda()
