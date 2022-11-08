@@ -106,8 +106,9 @@ RUN mkdir -p /home/user/.local/share/yarp/contexts && \
     mkdir /home/user/.runtime && \
 #
 # exports
-    echo "source /robotology-superbuild/build/install/share/robotology-superbuild/setup.sh" >> /home/user/.bashrc && \
     echo "export YARP_RUNTIME_DIR=/home/user/.runtime" >> /home/user/.bashrc && \
+    echo "export PATH=\$PATH:/home/user/hyperpcr/install/bin" >> /home/user/.bashrc && \
+    echo "source /robotology-superbuild/build/install/share/robotology-superbuild/setup.sh" >> /home/user/.bashrc && \
     echo "source /home/user/hyperpcr/env/bin/activate" >> /home/user/.bashrc && \
 #
 # hyperpcr-viewer xml and config
