@@ -1,6 +1,16 @@
 <application>
     <name>HyperPCR YARP</name>
 
+    <module>
+        <name>hyperpcr-viz</name>
+        <node>localhost</node>
+    </module>
+
+    <!-- <module> -->
+    <!--     <name></name> -->
+    <!--     <node>localhost</node> -->
+    <!-- </module>     -->
+
     <connection>
         <from>/depthCamera/depthImage:o</from>
         <to>/hyperpcr/depth:i</to>
