@@ -6,10 +6,10 @@
         <node>localhost</node>
     </module>
 
-    <!-- <module> -->
-    <!--     <name></name> -->
-    <!--     <node>localhost</node> -->
-    <!-- </module>     -->
+    <module>
+        <name>python3 -c "from pcr_yarp.module import main; main()"</name>
+        <node>localhost</node>
+    </module>
 
     <connection>
         <from>/depthCamera/depthImage:o</from>
