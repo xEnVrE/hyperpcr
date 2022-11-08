@@ -1,15 +1,10 @@
-import os
-this_file_path = os.path.dirname(os.path.abspath(__file__))
-venv_activator_path = os.path.join(this_file_path, '..', 'env', 'bin', 'activate_this.py')
-if os.path.exists(venv_activator_path):
-    print('Info: executing the venv activator in ' + venv_activator_path)
-    exec(open(venv_activator_path).read(), {'__file__': venv_activator_path})
-
 import argparse
 import copy
+import inspect
 import open3d as o3d
 import os
 import numpy
+import pcr
 import pyquaternion
 import torch
 import yarp
@@ -39,7 +34,8 @@ class InferenceModule(yarp.RFModule):
         yarp.RFModule.__init__(self)
 
         # Initialize inference
-        ckpt_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'checkpoints', 'grasping.ckpt')
+        module_path = '/'.join(inspect.getsourcefile(pcr).split('/')[:-2])
+        ckpt_path = os.path.join(module_path, 'checkpoints', 'grasping.ckpt')
         self.model = Model(config = Config.Model)
         self.model.load_state_dict(torch.load(ckpt_path)['state_dict'])
         self.model.cuda()
