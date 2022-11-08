@@ -7,7 +7,7 @@
     </module>
 
     <module>
-        <name>python3 -c "from pcr_yarp.module import main; main()"</name>
+        <name>pcr_yarp_module</name>
         <node>localhost</node>
     </module>
 
