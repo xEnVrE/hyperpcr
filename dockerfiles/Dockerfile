@@ -97,7 +97,7 @@ RUN source /robotology-superbuild/build/install/share/robotology-superbuild/setu
     # pip install cudf-cu11 dask-cudf-cu11 --extra-index-url=https://pypi.ngc.nvidia.com && \
     # pip install cuml-cu11 --extra-index-url=https://pypi.ngc.nvidia.com && \
     # pip uninstall --yes cupy-cuda115 && pip install cupy-cuda111 && \
-    #
+    python -c "from pcr.misc import download_checkpoint; download_checkpoint(f'grasping.ckpt')" && \
     deactivate
 
 # Configure robotology-superbuild
