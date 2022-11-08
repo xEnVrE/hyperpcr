@@ -1,8 +1,8 @@
-# this makes possible to run this from the yarpmanager
 import os
 this_file_path = os.path.dirname(os.path.abspath(__file__))
-venv_activator_path = os.path.join(this_file_path, '../env/bin/activate_this.py')
+venv_activator_path = os.path.join(this_file_path, '..', 'env', 'bin', 'activate_this.py')
 if os.path.exists(venv_activator_path):
+    print('Info: executing the venv activator in ' + venv_activator_path)
     exec(open(venv_activator_path).read(), {'__file__': venv_activator_path})
 
 import argparse
@@ -17,7 +17,7 @@ from dbscan import DBSCAN
 from pcr.model import PCRNetwork as Model
 from pcr.utils import Normalize, Denormalize
 from pcr.default_config import Config
-from pcr.misc import download_checkpoint, download_asset
+from pcr.misc import download_checkpoint
 from pcr_yarp.config import Config as IMConfig
 from pcr_yarp.pose_filter import PoseFilter
 
