@@ -4,3 +4,6 @@ pcr/__pycache__/*.pyc
 pcr/model/__pycache__/*.pyc
 pcr/utils/__pycache__/*.pyc
 pcr_yarp/__pycache__/*.pyc
+install/*
+build/*
+env/*
