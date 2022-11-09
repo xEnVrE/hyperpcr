@@ -1,7 +1,6 @@
 import time
 import numpy
 import open3d as o3d
-from sklearn.decomposition import PCA
 
 
 def add_point_cloud(name, points, color, size, scene):
