@@ -16,6 +16,7 @@ from pcr_yarp.config import Config as IMConfig
 from pcr_yarp.cloud_output import CloudOutput
 from pcr_yarp.image_input import ImageInput
 from pcr_yarp.pose_filter import PoseFilter
+from pcr_yarp.pose_output import PoseOutput
 
 
 class InferenceModule(yarp.RFModule):
@@ -50,6 +51,9 @@ class InferenceModule(yarp.RFModule):
 
         # Initialize point cloud output
         self.cloud_output = CloudOutput('hyperpcr', config)
+
+        # Initialize pose output
+        self.pose_output = PoseOutput('hyperpcr', config)
 
         self.store_image_selector()
 
@@ -95,9 +99,11 @@ class InferenceModule(yarp.RFModule):
 
     def updateModule(self):
 
-        valid, depth, mask = self.image_input.get_images()
+        is_valid_iteration = True
 
-        if valid:
+        valid_images, depth, mask = self.image_input.get_images()
+
+        if valid_images:
             starter = torch.cuda.Event(enable_timing = True)
             ender = torch.cuda.Event(enable_timing = True)
             starter.record()
@@ -114,12 +120,24 @@ class InferenceModule(yarp.RFModule):
                 if self.config.PoseFiltering.enable:
                     pose = self.pose_filter.step(pose)
 
+                self.pose_output.send_output(pose)
                 self.cloud_output.send_output(complete, pose)
+
+            else:
+                is_valid_iteration = False
 
             ender.record()
             torch.cuda.synchronize()
-            elapsed = starter.elapsed_time(ender) / 1000.0
-            print(1.0 / elapsed)
+            if is_valid_iteration:
+                elapsed = starter.elapsed_time(ender) / 1000.0
+                print(1.0 / elapsed)
+
+        else:
+            is_valid_iteration = False
+
+        # Send a non valid pose to mark that the input was received but the output is not available
+        if not is_valid_iteration:
+            self.pose_output.send_output(None)
 
         return True
 
