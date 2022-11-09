@@ -114,7 +114,7 @@ RUN source /robotology-superbuild/build/install/share/robotology-superbuild/setu
     rm -rf /home/user/robots-io && \
 
     # download weights
-    python -c "from pcr.misc import download_checkpoint; download_checkpoint(f'grasping.ckpt')" && \
+    # python -c "from pcr.misc import download_checkpoint; download_checkpoint(f'grasping.ckpt')" && \
     deactivate
 
 # Several configurations
