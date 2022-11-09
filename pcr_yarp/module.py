@@ -13,6 +13,8 @@ from pcr.model import PCRNetwork as Model
 from pcr.utils import Normalize, Denormalize
 from pcr.default_config import Config
 from pcr_yarp.config import Config as IMConfig
+from pcr_yarp.cloud_output import CloudOutput
+from pcr_yarp.image_input import ImageInput
 from pcr_yarp.pose_filter import PoseFilter
 
 
@@ -43,26 +45,11 @@ class InferenceModule(yarp.RFModule):
         # Initialize pose filter
         self.pose_filter = PoseFilter()
 
-        # Initialize YARP ports
-        self.depth_in = yarp.BufferedPortImageFloat()
-        self.depth_in.open('/hyperpcr/depth:i')
+        # Initialize image input
+        self.image_input = ImageInput('hyperpcr', config)
 
-        self.mask_in = yarp.BufferedPortImageMono()
-        self.mask_in.open('/hyperpcr/mask:i')
-
-        self.cloud_out = yarp.Port()
-        self.cloud_out.open('/hyperpcr/cloud:o')
-
-        # Input buffers initialization
-        self.depth_buffer = bytearray(numpy.zeros((self.config.Camera.height, self.config.Camera.width, 1), dtype = numpy.float32))
-        self.depth_image = yarp.ImageFloat()
-        self.depth_image.resize(self.config.Camera.width, self.config.Camera.height)
-        self.depth_image.setExternal(self.depth_buffer, self.config.Camera.width, self.config.Camera.height)
-
-        self.mask_buffer = bytearray(numpy.zeros((self.config.Camera.height, self.config.Camera.width, 1), dtype = numpy.uint8))
-        self.mask_image = yarp.ImageMono()
-        self.mask_image.resize(self.config.Camera.width, self.config.Camera.height)
-        self.mask_image.setExternal(self.mask_buffer, self.config.Camera.width, self.config.Camera.height)
+        # Initialize point cloud output
+        self.cloud_output = CloudOutput('hyperpcr', config)
 
         self.store_image_selector()
 
@@ -83,8 +70,8 @@ class InferenceModule(yarp.RFModule):
 
     def close(self):
 
-        self.depth_in.close()
-        self.mask_in.close()
+        self.image_input.close()
+        self.cloud_output.close()
 
         return True
 
@@ -108,49 +95,26 @@ class InferenceModule(yarp.RFModule):
 
     def updateModule(self):
 
-        depth = self.depth_in.read(False)
-        mask = self.mask_in.read(False)
+        valid, depth, mask = self.image_input.get_images()
 
-        if (depth is not None) and (mask is not None):
-
+        if valid:
             starter = torch.cuda.Event(enable_timing = True)
             ender = torch.cuda.Event(enable_timing = True)
             starter.record()
 
-            self.depth_image.copy(depth)
-            depth_frame = numpy.frombuffer(self.depth_buffer, dtype=numpy.float32).reshape(self.config.Camera.height, self.config.Camera.width)
+            valid_cloud, cloud = self.get_point_cloud(depth, mask)
 
-            self.mask_image.copy(mask)
-            mask_frame = numpy.frombuffer(self.mask_buffer, dtype=numpy.uint8).reshape(self.config.Camera.height, self.config.Camera.width)
-
-            mask_selector = mask_frame != 0
-            depth_valid_up_selector = depth_frame < self.config.Depth.upper_bound
-            depth_valid_down_selector = depth_frame > self.config.Depth.lower_bound
-            valid_selector = mask_selector & depth_valid_up_selector & depth_valid_down_selector
-            z = depth_frame[valid_selector]
-            x_z = self.selector_u[valid_selector]
-            y_z = self.selector_v[valid_selector]
-
-            if len(z) > 0:
-                cloud = numpy.zeros((z.shape[0], 3), dtype = numpy.float32)
-                cloud[:, 0] = x_z * z
-                cloud[:, 1] = y_z * z
-                cloud[:, 2] = z
-
+            if valid_cloud:
                 if self.config.DBSCAN.enable:
                     cloud = self.dbscan_filter(cloud)
 
-                partial, ctx = Normalize(Config.Processing)(cloud)
-                partial = torch.tensor(partial, dtype=torch.float32).cuda().unsqueeze(0)
-                complete, probabilities = self.model(partial)
-                complete = complete.squeeze(0).cpu().numpy()
-                complete = Denormalize(Config.Processing)(complete, ctx)
+                complete = self.complete_cloud(cloud)
 
                 pose = self.get_obb_pose(complete)
                 if self.config.PoseFiltering.enable:
                     pose = self.pose_filter.step(pose)
 
-                self.send_output(complete, pose)
+                self.cloud_output.send_output(complete, pose)
 
             ender.record()
             torch.cuda.synchronize()
@@ -172,25 +136,36 @@ class InferenceModule(yarp.RFModule):
         return cloud
 
 
-    def send_output(self, cloud, pose):
+    def get_point_cloud(self, depth, mask):
 
-        # convert pose in position, axis, angle
-        q = pyquaternion.Quaternion(matrix = pose[0:3, 0:3])
-        axis_angle = numpy.zeros(4)
-        axis_angle[:3] = q.axis
-        axis_angle[3] = q.angle
+        mask_selector = mask != 0
+        depth_valid_up_selector = depth < self.config.Depth.upper_bound
+        depth_valid_down_selector = depth > self.config.Depth.lower_bound
+        valid_selector = mask_selector & depth_valid_up_selector & depth_valid_down_selector
+        z = depth[valid_selector]
+        x_z = self.selector_u[valid_selector]
+        y_z = self.selector_v[valid_selector]
 
-        # we allocate two additional columns to send also the pose of the oriented bounding box
-        total_size = cloud.shape[0] + 2
-        self.yarp_cloud_source = numpy.zeros((total_size, 4), dtype = numpy.float32)
-        self.yarp_cloud_source[:cloud.shape[0], 0:3] = cloud
-        self.yarp_cloud_source[cloud.shape[0], 0:3] = pose[0:3, 3]
-        self.yarp_cloud_source[cloud.shape[0] + 1, :] = axis_angle
+        if len(z) > 0:
+            cloud = numpy.zeros((z.shape[0], 3), dtype = numpy.float32)
+            cloud[:, 0] = x_z * z
+            cloud[:, 1] = y_z * z
+            cloud[:, 2] = z
 
-        yarp_cloud = yarp.ImageFloat()
-        yarp_cloud.resize(self.yarp_cloud_source.shape[1], self.yarp_cloud_source.shape[0])
-        yarp_cloud.setExternal(self.yarp_cloud_source.data, self.yarp_cloud_source.shape[1], self.yarp_cloud_source.shape[0])
-        self.cloud_out.write(yarp_cloud)
+            return True, cloud
+        else:
+            return False, None
+
+
+    def complete_cloud(self, cloud):
+
+        partial, ctx = Normalize(Config.Processing)(cloud)
+        partial = torch.tensor(partial, dtype=torch.float32).cuda().unsqueeze(0)
+        complete, probabilities = self.model(partial)
+        complete = complete.squeeze(0).cpu().numpy()
+        complete = Denormalize(Config.Processing)(complete, ctx)
+
+        return complete
 
 
 def main():
