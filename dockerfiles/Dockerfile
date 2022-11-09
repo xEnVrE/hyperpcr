@@ -49,7 +49,7 @@ RUN git config --global user.name "user" && \
 RUN source /robotology-superbuild/build/install/share/robotology-superbuild/setup.sh && \
     git clone --progress https://github.com/xenvre/robots-io && \
     cd robots-io && mkdir build && cd build && \
-    cmake -DUSE_YARP:BOOL=ON -DUSE_ICUB:BOOL=ON .. && \
+    cmake -DUSE_YARP:BOOL=ON -DUSE_ICUB:BOOL=ON -DCMAKE_INSTALL_PREFIX=/usr/local .. && \
     make -j$NJOBS install && \
     rm -rf /robots-io
 
@@ -57,7 +57,7 @@ RUN source /robotology-superbuild/build/install/share/robotology-superbuild/setu
 RUN source /robotology-superbuild/build/install/share/robotology-superbuild/setup.sh && \
     git clone --progress https://github.com/xenvre/robots-viz && \
     cd robots-viz && mkdir build && cd build && \
-    cmake -DUSE_YARP:BOOL=ON .. && \
+    cmake -DUSE_YARP:BOOL=ON -DCMAKE_INSTALL_PREFIX=/usr/local .. && \
     make -j$NJOBS install && \
     rm -rf /robots-viz
 
@@ -82,21 +82,38 @@ RUN echo "(setq-default indent-tabs-mode nil)" >> /home/user/.emacs.el && \
 
 # Setup hyperpcr
 WORKDIR /home/user
+    # clone
 RUN source /robotology-superbuild/build/install/share/robotology-superbuild/setup.sh && \
     git clone --progress https://github.com/xenvre/hyperpcr && \
     cd ./hyperpcr && mkdir build && cd build && \
+
+    # compile C++ part
     cmake -DCMAKE_INSTALL_PREFIX=/home/user/hyperpcr/install ../ && \
     make -j$NJOBS && \
+
+    # make virtualenv
     cd /home/user/hyperpcr && \
     virtualenv env && \
     . env/bin/activate && \
     pip install --upgrade pip && \
+
+    # install Python part
     pip install -e . && \
     # install cuDF and cuML
     # pip uninstall --yes jupyter-client && \
     # pip install cudf-cu11 dask-cudf-cu11 --extra-index-url=https://pypi.ngc.nvidia.com && \
     # pip install cuml-cu11 --extra-index-url=https://pypi.ngc.nvidia.com && \
     # pip uninstall --yes cupy-cuda115 && pip install cupy-cuda111 && \
+
+    # install robots-io python bindings
+    cd /home/user/ && \
+    git clone --progress https://github.com/xenvre/robots-io && \
+    cd robots-io/python && mkdir build && cd build && \
+    cmake ../ && \
+    make install && \
+    rm -rf /home/user/robots-io && \
+
+    # download weights
     python -c "from pcr.misc import download_checkpoint; download_checkpoint(f'grasping.ckpt')" && \
     deactivate
 
