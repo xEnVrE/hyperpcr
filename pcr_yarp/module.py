@@ -12,7 +12,6 @@ from dbscan import DBSCAN
 from pcr.model import PCRNetwork as Model
 from pcr.utils import Normalize, Denormalize
 from pcr.default_config import Config
-from pcr.misc import download_checkpoint
 from pcr_yarp.config import Config as IMConfig
 from pcr_yarp.pose_filter import PoseFilter
 
