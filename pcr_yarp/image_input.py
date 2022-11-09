@@ -1,4 +1,5 @@
 import numpy
+import robotsio
 import yarp
 
 
@@ -9,11 +10,15 @@ class ImageInput():
         self.config = config
 
         # Initialize YARP ports
-        self.depth_in = yarp.BufferedPortImageFloat()
-        self.depth_in.open('/' + prefix + '/depth:i')
+        if config.Input.joint_input_mode:
+            self.images_in = robotsio.BufferedPortYarpImageOfMonoFloat()
+            self.images_in.open('/' + prefix + '/images:i')
+        else:
+            self.depth_in = yarp.BufferedPortImageFloat()
+            self.depth_in.open('/' + prefix + '/depth:i')
 
-        self.mask_in = yarp.BufferedPortImageMono()
-        self.mask_in.open('/' + prefix + '/mask:i')
+            self.mask_in = yarp.BufferedPortImageMono()
+            self.mask_in.open('/' + prefix + '/mask:i')
 
         # Input buffers initialization
         self.depth_buffer = bytearray(numpy.zeros((self.config.Camera.height, self.config.Camera.width, 1), dtype = numpy.float32))
@@ -29,8 +34,17 @@ class ImageInput():
 
     def get_images(self):
 
-        depth = self.depth_in.read(False)
-        mask = self.mask_in.read(False)
+        depth = None
+        mask = None
+
+        if self.config.Input.joint_input_mode:
+            images_in = self.images_in.read(False)
+            if images_in is not None:
+                depth = images_data.image_float
+                mask = images_data.image_mono
+        else:
+            depth = self.depth_in.read(False)
+            mask = self.mask_in.read(False)
 
         if (depth is not None) and (mask is not None):
 
@@ -47,5 +61,8 @@ class ImageInput():
 
     def close(self):
 
-        self.depth_in.close()
-        self.mask_in.close()
+        if self.config.Input.joint_input_mode:
+            self.images_in.close()
+        else:
+            self.depth_in.close()
+            self.mask_in.close()
