@@ -4,7 +4,7 @@ import torch
 from pcr.model import PCRNetwork as Model
 from pcr.utils import Normalize, Denormalize
 from pcr.default_config import Config
-from pcr.misc import download_checkpoint, download_asset
+from pcr.misc_download import download_checkpoint, download_asset
 
 
 def main():

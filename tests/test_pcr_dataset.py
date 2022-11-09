@@ -8,7 +8,7 @@ from pcr import __version__
 from pcr.model import PCRNetwork as Model
 from pcr.utils import Normalize, Denormalize
 from pcr.default_config import Config
-from pcr.misc import download_checkpoint
+from pcr.misc_download import download_checkpoint
 import torch
 
 
