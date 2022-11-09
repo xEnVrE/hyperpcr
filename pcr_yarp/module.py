@@ -76,6 +76,7 @@ class InferenceModule(yarp.RFModule):
 
         self.image_input.close()
         self.cloud_output.close()
+        self.pose_output.close()
 
         return True
 
