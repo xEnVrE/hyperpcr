@@ -20,7 +20,11 @@ class PoseOutput():
 
     def send_output(self, pose, points):
 
-        output_vector = numpy.zeros(7)
+        total_size = 7
+        if points is not None:
+            total_size += points.shape[0] * points.shape[1]
+
+        output_vector = numpy.zeros(total_size)
         if pose is not None:
             q = pyquaternion.Quaternion(matrix = pose[0:3, 0:3])
 
@@ -28,18 +32,19 @@ class PoseOutput():
             output_vector[3:6] = q.axis
             output_vector[6] = q.angle
 
-        output_vector_yarp = yarp.Vector()
-        output_vector_yarp.resize(7 + points.shape[0] * points.shape[1])
-        for i in range(7):
-            output_vector_yarp[i] = output_vector[i]
-
         # The receiver will treat these as the 8 vertices of the object oriented bounding box
-        points_offset = 7
-        for i in range(8):
-            base_offset = points_offset + i * 3
-            output_vector_yarp[base_offset + 0] = points[i, 0]
-            output_vector_yarp[base_offset + 1] = points[i, 1]
-            output_vector_yarp[base_offset + 2] = points[i, 2]
+        if points is not None:
+            for i in range(points.shape[0]):
+                base_offset = 7 + i * 3
+                output_vector[base_offset + 0] = points[i, 0]
+                output_vector[base_offset + 1] = points[i, 1]
+                output_vector[base_offset + 2] = points[i, 2]
+
+        output_vector_yarp = yarp.Vector()
+        output_vector_yarp.resize(total_size)
+        print(total_size)
+        for i in range(total_size):
+            output_vector_yarp[i] = output_vector[i]
 
         # TODO: add stamp propagation
 

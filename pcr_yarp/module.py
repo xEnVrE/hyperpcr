@@ -128,7 +128,7 @@ class InferenceModule(yarp.RFModule):
 
             else:
                 # Send a non valid pose to mark that the input was received but the output is not available
-                self.pose_output.send_output(None)
+                self.pose_output.send_output(None, None)
 
             ender.record()
             torch.cuda.synchronize()
