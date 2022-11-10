@@ -100,7 +100,7 @@ RUN source /robotology-superbuild/build/install/share/robotology-superbuild/setu
     # install Python part
     pip install -e . && \
     # install cuDF and cuML
-    # pip uninstall --yes jupyter-client && \
+    # pip install jupyter-client==7.3.4 && \
     # pip install cudf-cu11 dask-cudf-cu11 --extra-index-url=https://pypi.ngc.nvidia.com && \
     # pip install cuml-cu11 --extra-index-url=https://pypi.ngc.nvidia.com && \
     # pip uninstall --yes cupy-cuda115 && pip install cupy-cuda111 && \
