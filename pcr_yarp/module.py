@@ -100,8 +100,6 @@ class InferenceModule(yarp.RFModule):
 
     def updateModule(self):
 
-        is_valid_iteration = True
-
         valid_images, depth, mask = self.image_input.get_images()
 
         if valid_images:
@@ -130,9 +128,8 @@ class InferenceModule(yarp.RFModule):
 
             ender.record()
             torch.cuda.synchronize()
-            if is_valid_iteration:
-                elapsed = starter.elapsed_time(ender) / 1000.0
-                print(1.0 / elapsed)
+            # elapsed = starter.elapsed_time(ender) / 1000.0
+            # print(1.0 / elapsed)
 
         return True
 
