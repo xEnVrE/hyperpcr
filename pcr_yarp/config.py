@@ -18,7 +18,7 @@ class Config:
         upper_bound = float(1.0)
 
     class Input:
-        joint_input_mode = bool(True)
+        joint_input_mode = bool(False)
 
     class PoseFiltering:
         enable = bool(True)
