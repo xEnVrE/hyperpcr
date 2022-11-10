@@ -42,7 +42,6 @@ class PoseOutput():
 
         output_vector_yarp = yarp.Vector()
         output_vector_yarp.resize(total_size)
-        print(total_size)
         for i in range(total_size):
             output_vector_yarp[i] = output_vector[i]
 
