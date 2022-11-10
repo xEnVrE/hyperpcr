@@ -125,20 +125,14 @@ class InferenceModule(yarp.RFModule):
                 self.cloud_output.send_output(complete, pose)
 
             else:
-                is_valid_iteration = False
+                # Send a non valid pose to mark that the input was received but the output is not available
+                self.pose_output.send_output(None)
 
             ender.record()
             torch.cuda.synchronize()
             if is_valid_iteration:
                 elapsed = starter.elapsed_time(ender) / 1000.0
                 print(1.0 / elapsed)
-
-        else:
-            is_valid_iteration = False
-
-        # Send a non valid pose to mark that the input was received but the output is not available
-        if not is_valid_iteration:
-            self.pose_output.send_output(None)
 
         return True
 
