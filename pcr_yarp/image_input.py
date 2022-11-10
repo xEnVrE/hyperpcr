@@ -40,8 +40,8 @@ class ImageInput():
         if self.config.Input.joint_input_mode:
             images_in = self.images_in.read(False)
             if images_in is not None:
-                depth = images_data.image_float
-                mask = images_data.image_mono
+                depth = images_in.image_float
+                mask = images_in.image_mono
         else:
             depth = self.depth_in.read(False)
             mask = self.mask_in.read(False)
