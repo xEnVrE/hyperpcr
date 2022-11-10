@@ -12,6 +12,7 @@ class Config:
         enable = bool(True)
         eps = float(0.01)
         min_samples = int(100)
+        use_cuml = bool(False)
 
     class Depth:
         lower_bound = float(0.3)

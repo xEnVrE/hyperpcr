@@ -1,5 +1,6 @@
 import argparse
 import copy
+import cuml
 import inspect
 import open3d as o3d
 import os
@@ -28,6 +29,7 @@ class InferenceModule(yarp.RFModule):
         # Set requested GPU
         os.environ['CUDA_DEVICE_ORDER'] = 'PCI_BUS_ID'
         os.environ['CUDA_VISIBLE_DEVICES'] = str(self.config.Module.gpu_id)
+        cuml.set_global_output_type('numpy')
 
         # Initialize YARP network
         yarp.Network.init()
@@ -128,15 +130,21 @@ class InferenceModule(yarp.RFModule):
 
             ender.record()
             torch.cuda.synchronize()
-            # elapsed = starter.elapsed_time(ender) / 1000.0
-            # print(1.0 / elapsed)
+            elapsed = starter.elapsed_time(ender) / 1000.0
+            print(1.0 / elapsed)
 
         return True
 
 
     def dbscan_filter(self, cloud):
 
-        labels, _ = DBSCAN(cloud.astype(dtype = numpy.float64), eps = self.config.DBSCAN.eps, min_samples = self.config.DBSCAN.min_samples)
+        if self.config.DBSCAN.use_cuml:
+            dbscan = cuml.DBSCAN(eps = 0.01, min_samples = 100)
+            dbscan.fit(cloud)
+            labels = dbscan.labels_
+        else:
+            labels, _ = DBSCAN(cloud.astype(dtype = numpy.float64), eps = self.config.DBSCAN.eps, min_samples = self.config.DBSCAN.min_samples)
+
         labels_count = [list(labels).count(i) for i in range(0, labels.max() + 1)]
         if len(labels_count) > 0:
             label_max = numpy.argmax(labels_count)
