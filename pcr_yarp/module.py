@@ -139,7 +139,7 @@ class InferenceModule(yarp.RFModule):
     def dbscan_filter(self, cloud):
 
         if self.config.DBSCAN.use_cuml:
-            dbscan = cuml.DBSCAN(eps = 0.01, min_samples = 100)
+            dbscan = cuml.DBSCAN(eps = self.config.DBSCAN.eps, min_samples = self.config.DBSCAN.min_samples)
             dbscan.fit(cloud)
             labels = dbscan.labels_
         else:
