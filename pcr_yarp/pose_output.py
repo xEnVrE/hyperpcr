@@ -18,7 +18,7 @@ class PoseOutput():
         self.pose_out.close()
 
 
-    def send_output(self, pose):
+    def send_output(self, pose, points):
 
         output_vector = numpy.zeros(7)
         if pose is not None:
@@ -29,9 +29,17 @@ class PoseOutput():
             output_vector[6] = q.angle
 
         output_vector_yarp = yarp.Vector()
-        output_vector_yarp.resize(7)
+        output_vector_yarp.resize(7 + points.shape[0] * points.shape[1])
         for i in range(7):
             output_vector_yarp[i] = output_vector[i]
+
+        # The receiver will treat these as the 8 vertices of the object oriented bounding box
+        points_offset = 7
+        for i in range(8):
+            base_offset = points_offset + i * 3
+            output_vector_yarp[base_offset + 0] = points[i, 0]
+            output_vector_yarp[base_offset + 1] = points[i, 1]
+            output_vector_yarp[base_offset + 2] = points[i, 2]
 
         # TODO: add stamp propagation
 

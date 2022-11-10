@@ -88,7 +88,7 @@ class InferenceModule(yarp.RFModule):
         return self.config.Module.period
 
 
-    def get_obb_pose(self, points):
+    def get_obb_data(self, points):
 
         cloud = o3d.geometry.PointCloud()
         cloud.points = o3d.utility.Vector3dVector(points)
@@ -97,7 +97,9 @@ class InferenceModule(yarp.RFModule):
         pose = pyquaternion.Quaternion(matrix = bbox.R).transformation_matrix
         pose[0:3, 3] = cloud.get_center()
 
-        return pose
+        points = numpy.asarray(bbox.get_box_points())
+
+        return pose, points
 
 
     def updateModule(self):
@@ -117,11 +119,11 @@ class InferenceModule(yarp.RFModule):
 
                 complete = self.complete_cloud(cloud)
 
-                pose = self.get_obb_pose(complete)
+                pose, points = self.get_obb_data(complete)
                 if self.config.PoseFiltering.enable:
                     pose = self.pose_filter.step(pose)
 
-                self.pose_output.send_output(pose)
+                self.pose_output.send_output(pose, points)
                 self.cloud_output.send_output(complete, pose)
 
             else:
