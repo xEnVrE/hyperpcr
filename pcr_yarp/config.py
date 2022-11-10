@@ -26,4 +26,4 @@ class Config:
 
     class Module:
         gpu_id = int(0)
-        period = float(0.1)
+        period = float(0.01)
