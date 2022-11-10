@@ -182,7 +182,19 @@ class InferenceModule(yarp.RFModule):
 
 
 def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--override-config-file', dest = 'override_config_file', action = 'store_true')
+    parser.add_argument('--use-joint-input-mode', dest = 'use_joint_input_mode', action = 'store_true')
+    parser.set_defaults(override_config_file = False)
+    parser.set_defaults(use_joint_input_mode= False)
+    args = parser.parse_args()
+
     config = IMConfig()
+
+    if args.override_config_file:
+        if args.use_joint_input_mode:
+            config.Input.joint_input_mode = True
+
     module = InferenceModule(config)
     module.runModule()
 
