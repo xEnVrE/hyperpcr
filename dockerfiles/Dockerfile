@@ -129,7 +129,7 @@ RUN mkdir -p /home/user/.local/share/yarp/contexts && \
     echo "source /home/user/hyperpcr/env/bin/activate" >> /home/user/.bashrc && \
 #
 # hyperpcr-viewer xml and config
-    cp /home/user/hyperpcr/pcr_yarp/app/hyperpcr.xml /home/user/.local/share/yarp/applications/hyperpcr.xml && \
+    cp /home/user/hyperpcr/pcr_yarp/app/*.xml /home/user/.local/share/yarp/applications/ && \
     mkdir /home/user/.local/share/yarp/contexts/hyperpcr-viewer && \
     cp /home/user/hyperpcr/src/viewer/config/config.ini.template /home/user/.local/share/yarp/contexts/hyperpcr-viewer/config.ini
 
