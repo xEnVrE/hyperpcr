@@ -93,13 +93,19 @@ class InferenceModule(yarp.RFModule):
         cloud = o3d.geometry.PointCloud()
         cloud.points = o3d.utility.Vector3dVector(points)
 
-        bbox = cloud.get_oriented_bounding_box()
+        # This is required as the underlying Qhull might fail when points are distributed weirdly in space
+        try:
+            bbox = cloud.get_oriented_bounding_box()
+        except RuntimeError:
+            print('Warning: qhull failed. Cannot extract the pose from the point cloud.')
+            return False, None, None
+
         pose = pyquaternion.Quaternion(matrix = bbox.R).transformation_matrix
         pose[0:3, 3] = cloud.get_center()
 
         points = numpy.asarray(bbox.get_box_points())
 
-        return pose, points
+        return True, pose, points
 
 
     def updateModule(self):
@@ -119,13 +125,16 @@ class InferenceModule(yarp.RFModule):
 
                 complete = self.complete_cloud(cloud)
 
-                pose, points = self.get_obb_data(complete)
-                if self.config.PoseFiltering.enable:
-                    pose = self.pose_filter.step(pose)
+                valid_obb, pose, points = self.get_obb_data(complete)
+                if valid_obb:
+                    if self.config.PoseFiltering.enable:
+                        pose = self.pose_filter.step(pose)
 
-                self.pose_output.send_output(pose, points)
-                self.cloud_output.send_output(complete, pose)
-
+                    self.pose_output.send_output(pose, points)
+                    self.cloud_output.send_output(complete, pose)
+                else:
+                    # Send a non valid pose to mark that the input was received but the output is not available
+                    self.pose_output.send_output(None, None)
             else:
                 # Send a non valid pose to mark that the input was received but the output is not available
                 self.pose_output.send_output(None, None)
