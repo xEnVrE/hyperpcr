@@ -15,7 +15,7 @@ class Config:
         use_cuml = bool(False)
 
     class Depth:
-        lower_bound = float(0.3)
+        lower_bound = float(0.2)
         upper_bound = float(1.0)
 
     class Input:
