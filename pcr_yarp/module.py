@@ -113,36 +113,42 @@ class InferenceModule(yarp.RFModule):
         valid_images, depth, mask = self.image_input.get_images()
 
         if valid_images:
-            starter = torch.cuda.Event(enable_timing = True)
-            ender = torch.cuda.Event(enable_timing = True)
-            starter.record()
+            try:
+                starter = torch.cuda.Event(enable_timing = True)
+                ender = torch.cuda.Event(enable_timing = True)
+                starter.record()
 
-            valid_cloud, cloud = self.get_point_cloud(depth, mask)
+                valid_cloud, cloud = self.get_point_cloud(depth, mask)
 
-            if valid_cloud:
-                if self.config.DBSCAN.enable:
-                    cloud = self.dbscan_filter(cloud)
+                if valid_cloud:
+                    if self.config.DBSCAN.enable:
+                        cloud = self.dbscan_filter(cloud)
 
-                complete = self.complete_cloud(cloud)
+                    complete = self.complete_cloud(cloud)
 
-                valid_obb, pose, points = self.get_obb_data(complete)
-                if valid_obb:
-                    if self.config.PoseFiltering.enable:
-                        pose = self.pose_filter.step(pose)
+                    valid_obb, pose, points = self.get_obb_data(complete)
+                    if valid_obb:
+                        if self.config.PoseFiltering.enable:
+                            pose = self.pose_filter.step(pose)
 
-                    self.pose_output.send_output(pose, points)
-                    self.cloud_output.send_output(complete, pose)
+                        self.pose_output.send_output(pose, points)
+                        self.cloud_output.send_output(complete, pose)
+                    else:
+                        # Send a non valid pose to mark that the input was received but the output is not available
+                        self.pose_output.send_output(None, None)
                 else:
                     # Send a non valid pose to mark that the input was received but the output is not available
                     self.pose_output.send_output(None, None)
-            else:
+
+                ender.record()
+                torch.cuda.synchronize()
+                elapsed = starter.elapsed_time(ender) / 1000.0
+                print(1.0 / elapsed)
+            except Exception as e:
+                print(e)
+                print("An exception has occured, sending a invalid pose.")
                 # Send a non valid pose to mark that the input was received but the output is not available
                 self.pose_output.send_output(None, None)
-
-            ender.record()
-            torch.cuda.synchronize()
-            elapsed = starter.elapsed_time(ender) / 1000.0
-            print(1.0 / elapsed)
 
         return True
 
