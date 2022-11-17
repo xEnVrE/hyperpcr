@@ -2,6 +2,8 @@ fps 30.0
 show_scene true
 show_partial true
 show_completed true
+width 576
+height 432
 
 [CAMERA]
 source YARP

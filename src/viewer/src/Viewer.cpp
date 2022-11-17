@@ -30,8 +30,10 @@ Viewer::Viewer(const ResourceFinder& resource_finder)
     const bool show_scene = resource_finder.check("show_scene", Value(true)).asBool();
     const bool show_partial = resource_finder.check("show_partial", Value(true)).asBool();
     const bool show_completed = resource_finder.check("show_completed", Value(true)).asBool();
+    const int width = resource_finder.check("width", Value(640)).asInt32();
+    const int height = resource_finder.check("height", Value(480)).asInt32();
 
-    vtk_container_ = std::make_unique<VtkContainer>(1.0 / fps, 600, 600, false);
+    vtk_container_ = std::make_unique<VtkContainer>(1.0 / fps, width, height, false);
 
     if (show_scene)
     {
