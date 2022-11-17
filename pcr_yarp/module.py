@@ -219,6 +219,9 @@ def main():
         if args.use_joint_input_mode:
             config.Input.joint_input_mode = True
 
+    # Print the current config at startup
+    print(config)
+
     module = InferenceModule(config)
     module.runModule()
 
