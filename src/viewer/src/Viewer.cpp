@@ -34,6 +34,7 @@ Viewer::Viewer(const ResourceFinder& resource_finder)
     const int height = resource_finder.check("height", Value(480)).asInt32();
 
     vtk_container_ = std::make_unique<VtkContainer>(1.0 / fps, width, height, false);
+    vtk_container_->set_title("Shape completion output");
 
     if ((!resource_finder.find("x").isNull()) && (!resource_finder.find("y").isNull()))
     {
