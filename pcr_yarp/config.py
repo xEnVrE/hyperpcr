@@ -21,9 +21,9 @@ class Config:
     class Input:
         joint_input_mode = bool(False)
 
-    class PoseFiltering:
-        enable = bool(True)
-
     class Module:
         gpu_id = int(0)
         period = float(0.01)
+
+    class PoseFiltering:
+        enable = bool(True)
