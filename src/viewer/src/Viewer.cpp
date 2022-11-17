@@ -35,6 +35,13 @@ Viewer::Viewer(const ResourceFinder& resource_finder)
 
     vtk_container_ = std::make_unique<VtkContainer>(1.0 / fps, width, height, false);
 
+    if ((!resource_finder.find("x").isNull()) && (!resource_finder.find("y").isNull()))
+    {
+        const int x = resource_finder.find("x").asInt32();
+        const int y = resource_finder.find("y").asInt32();
+        vtk_container_->set_position(x, y);
+    }
+
     if (show_scene)
     {
         const Bottle& camera_bottle = resource_finder.findGroup("CAMERA");
