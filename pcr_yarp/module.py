@@ -95,7 +95,7 @@ class InferenceModule(yarp.RFModule):
 
         # This is required as the underlying Qhull might fail when points are distributed weirdly in space
         try:
-            bbox = cloud.get_oriented_bounding_box()
+            bbox = cloud.get_oriented_bounding_box(robust = self.config.Open3D.oriented_bounding_box_robust)
         except RuntimeError:
             print('Warning: qhull failed. Cannot extract the pose from the point cloud.')
             return False, None, None

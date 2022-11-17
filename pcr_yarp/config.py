@@ -25,5 +25,8 @@ class Config:
         gpu_id = int(0)
         period = float(0.01)
 
+    class Open3D:
+        oriented_bounding_box_robust = bool(True)
+
     class PoseFiltering:
         enable = bool(True)
