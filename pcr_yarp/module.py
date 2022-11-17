@@ -144,9 +144,11 @@ class InferenceModule(yarp.RFModule):
                 torch.cuda.synchronize()
                 elapsed = starter.elapsed_time(ender) / 1000.0
                 print(1.0 / elapsed)
+
             except Exception as e:
                 print(e)
                 print("An exception has occured, sending a invalid pose.")
+
                 # Send a non valid pose to mark that the input was received but the output is not available
                 self.pose_output.send_output(None, None)
 
