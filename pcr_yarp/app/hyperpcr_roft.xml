@@ -4,11 +4,13 @@
     <module>
         <name>hyperpcr-viz</name>
         <node>localhost</node>
+        <parameters>--x 1324 --y 546</parameters>
     </module>
 
     <module>
-        <name>pcr_yarp_module --override-config-file --use-joint-input-mode</name>
-        <node>localhost</node>
+      <name>pcr_yarp_module</name>
+      <parameters>--override-config-file --use-joint-input-mode</parameters>
+      <node>localhost</node>
     </module>
 
     <connection>
