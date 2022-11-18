@@ -1,0 +1,34 @@
+<application>
+    <name>HyperPCR YARP with ROFT (Two displays)</name>
+
+    <module>
+        <name>hyperpcr-viz</name>
+        <node>localhost</node>
+        <parameters>--x 2020 --y 546</parameters>
+    </module>
+
+    <module>
+      <name>pcr_yarp_module</name>
+      <parameters>--override-config-file --use-joint-input-mode</parameters>
+      <node>localhost</node>
+    </module>
+
+    <connection>
+        <from>/depthCamera/depthImage:o</from>
+        <to>/hyperpcr-viewer/depth:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/depthCamera/rgbImage:o</from>
+        <to>/hyperpcr-viewer/rgb:i</to>
+        <protocol>mjpeg</protocol>
+    </connection>
+
+    <connection>
+        <from>/hyperpcr/cloud:o</from>
+        <to>/hyperpcr-viewer/reconstructed_cloud:i</to>
+        <protocol>unix_stream</protocol>
+    </connection>
+
+</application>
