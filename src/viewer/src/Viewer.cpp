@@ -113,7 +113,7 @@ Viewer::Viewer(const ResourceFinder& resource_finder)
         auto vtk_reconstructed_pc = std::make_unique<VtkPointCloud>(std::move(reconstructed_pc));
 
         /* Configure the reference frame attached to the reconstructed cloud. */
-        vtk_reconstructed_pc->get_reference_frame().set_visibility(true);
+        vtk_reconstructed_pc->get_reference_frame().set_visibility(false);
         vtk_reconstructed_pc->get_reference_frame().set_length(reference_frame_length);
 
         vtk_container_->add_content("completed", std::move(vtk_reconstructed_pc));
