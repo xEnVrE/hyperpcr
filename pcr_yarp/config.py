@@ -3,10 +3,18 @@ class Config:
     class Camera:
         width = int(640)
         height = int(480)
-        fx = float(618.0714111328125)
-        fy = float(617.783447265625)
-        cx = float(305.902252197265625)
-        cy = float(246.352935791015625)
+
+        # d415
+        # fx = float(618.0714111328125)
+        # fy = float(617.783447265625)
+        # cx = float(305.902252197265625)
+        # cy = float(246.352935791015625)
+
+        # d405
+        fx = float(430.24957275390625)
+        fy = float(429.587615966796875)
+        cx = float(314.24688720703125)
+        cy = float(238.2362518310546875)
 
     class DBSCAN:
         enable = bool(True)
